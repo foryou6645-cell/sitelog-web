@@ -1,5 +1,5 @@
 // 감독일지 사진 자동 첨부 — 브라우저 엔진 (사진은 이 PC 밖으로 나가지 않음)
-import * as ort from './ort.wasm.bundle.min.mjs?v=20261108e';
+import * as ort from './ort.wasm.bundle.min.mjs?v=20261108g';
 
 const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
 let session = null;

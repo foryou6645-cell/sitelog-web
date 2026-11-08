@@ -4,15 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
-<script src="./jszip.min.js?v=20261108e"></script>
-<script src="./docx-preview.min.js?v=20261108e"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="./jszip.min.js?v=20261108g"></script>
+<script src="./docx-preview.min.js?v=20261108g"></script>
 <script>
 // 프로그램이 멈추면 화면에 이유를 보여줌 (버튼이 안 눌리는 상태로 조용히 멈추지 않게)
-window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span style="color:#d93f3f">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, true);
-setTimeout(() => { const el = document.getElementById('libinfo'); if (el && el.textContent.includes('불러오는 중')) el.innerHTML = '<span style="color:#d93f3f">페이지를 불러오지 못했습니다. Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, 20000);
+window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span style="color:#c2574a">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, true);
+setTimeout(() => { const el = document.getElementById('libinfo'); if (el && el.textContent.includes('불러오는 중')) el.innerHTML = '<span style="color:#c2574a">페이지를 불러오지 못했습니다. Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, 20000);
 </script>
 <style>
-:root{--blue:#1f6feb;--navy:#1f3a5f;--line:#d8dde6;--bg:#f4f5f7;--red:#d93f3f}
+:root{--blue:#3f6f66;--navy:#2c3e39;--line:#e6f2ee;--bg:#f7f8f6;--red:#c2574a;--brand:#3f6f66;--brand2:#4c7a73;--brand-d:#1f473e;--accent:#6fa394;--accent2:#5b8ea3;--soft:#eefaf5;--soft2:#d9efe6;--ink:#2a3733;--ink-s:#132720;--muted2:#6b8d83;--orange:#e08a2c;--ease:cubic-bezier(.4,0,.2,1)}
 *{box-sizing:border-box}
 body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;margin:0;background:var(--bg);color:#222}
 header{background:var(--navy);color:#fff;padding:14px 24px;font-size:18px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
@@ -67,6 +68,23 @@ button.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue)}
 .sticky{position:sticky;top:0;z-index:5}
 #done ul{margin:6px 0 0;padding-left:18px;font-size:13px}
 .hidden{display:none}
+.uphead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.uphead h2{margin:0}
+.resetbtn{background:#d93f3f;color:#fff;font-weight:bold;font-size:14px;padding:9px 18px;border-radius:8px;box-shadow:0 2px 6px #d93f3f55;border:2px solid #d93f3f}
+.resetbtn:hover:not(:disabled){background:#b92f2f;border-color:#b92f2f}
+.resetbtn:disabled{background:#eceef2;color:#9aa1ad;border-color:#dfe2e8;box-shadow:none;cursor:default}
+.resetbtn.pulse{animation:pulse 1.6s ease-out 2}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #d93f3f99}100%{box-shadow:0 0 0 14px #d93f3f00}}
+#cf{position:fixed;inset:0;background:#0d152099;z-index:120;display:none;align-items:center;justify-content:center}
+#cf.on{display:flex}
+#cf .box{background:#fff;border-radius:12px;width:min(420px,92vw);padding:24px 26px 20px;box-shadow:0 12px 40px #0006;text-align:center;border-top:6px solid #d93f3f}
+#cf .ico{font-size:40px;line-height:1}
+#cf h3{margin:10px 0 6px;font-size:19px}
+#cf p{margin:0 0 18px;color:#555;font-size:13.5px;line-height:1.6}
+#cf .btns{display:flex;gap:10px;justify-content:center}
+#cf .btns button{min-width:110px;padding:10px 0;font-size:15px;font-weight:bold;border-radius:8px}
+#cfYes{background:#d93f3f}#cfYes:hover{background:#b92f2f}
+#cfNo{background:#eef0f4;color:#333}#cfNo:hover{background:#e0e3ea}
 /* ---------- 사용법 ---------- */
 main:not(.wide){max-width:1680px}
 .startwrap{display:grid;grid-template-columns:420px minmax(0,1fr);gap:18px;align-items:start}
@@ -137,6 +155,89 @@ button.x{background:#fff;color:var(--red);border:1px solid var(--red);padding:5p
 .sec.excl .ph .nm{text-decoration:line-through;color:#a66}
 .sec.excl.over{background:#ffe3e3}
 label{cursor:pointer}
+
+/* ================= 올젠바이오 디자인 (색감·모양·움직임 통일) ================= */
+body{font-family:'Pretendard Variable',Pretendard,'Geist',-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+header{background:#fff;color:#2c3e39;border-bottom:1px solid var(--line);padding:14px 28px;font-size:18px;font-weight:800;position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.2)}
+header .hl::before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-right:10px}
+header small{color:var(--muted2);opacity:1;font-weight:600}
+header .help{background:var(--soft);color:var(--brand);border:1.5px solid var(--soft2);border-radius:999px;font-weight:700;transition:all .15s var(--ease)}
+header .help:hover{border-color:var(--brand2);background:#fff;color:var(--brand-d)}
+.card{border-radius:16px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(80,110,100,.06);padding:20px 24px}
+h2{color:var(--ink-s);font-weight:800;letter-spacing:-.02em}
+button{background:linear-gradient(135deg,var(--brand),var(--brand2));border-radius:10px;font-weight:700;box-shadow:0 4px 14px rgba(80,110,100,.18);transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease)}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 18px rgba(80,110,100,.25)}
+button:active:not(:disabled){transform:translateY(0)}
+button.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--soft2);box-shadow:none}
+button.ghost:hover:not(:disabled){border-color:var(--brand2);background:var(--soft);color:var(--brand-d);box-shadow:none}
+button.x{background:#fff;color:var(--red);border:1.5px solid #ecc9c4;box-shadow:none;border-radius:8px}
+button.x:hover:not(:disabled){background:#fcf1ef;border-color:var(--red);box-shadow:none}
+.resetbtn{background:linear-gradient(135deg,#c2574a,#b0473b)!important;border:0!important;border-radius:10px;box-shadow:0 4px 14px rgba(194,87,74,.28)!important}
+.resetbtn:hover:not(:disabled){box-shadow:0 6px 18px rgba(194,87,74,.38)!important}
+.resetbtn:disabled{background:#eef1f0!important;color:#a6b3af!important;box-shadow:none!important}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(194,87,74,.5)}100%{box-shadow:0 0 0 14px rgba(194,87,74,0)}}
+.drop{border:1.5px dashed var(--soft2);border-radius:14px;background:#fbfdfc;transition:all .15s var(--ease)}
+.drop:hover{border-color:var(--accent)}
+.drop.over{border-color:var(--brand2);background:var(--soft)}
+.muted{color:var(--muted2)}
+.fname{color:var(--ink)} .fname.none{color:#a6b3af}
+.bar{background:#e8efec;border-radius:999px}
+.bar i{background:linear-gradient(90deg,var(--brand),var(--accent))}
+.bar b{color:var(--ink-s)}
+.pv{border:1px solid var(--line);border-radius:14px}
+.pvc{border-color:var(--line);border-radius:10px;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.pvc:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(80,110,100,.15)}
+.pvc .no{background:linear-gradient(135deg,var(--brand),var(--brand2))}
+.pvc .rm{color:var(--red);border-color:#ecc9c4;box-shadow:none}
+.sec{border:1.5px dashed var(--soft2);border-radius:14px;transition:background .15s var(--ease),border-color .15s var(--ease)}
+.sec.over{background:var(--soft);border-color:var(--brand2)}
+.sec h3{color:var(--ink-s)}
+.ph{border-color:var(--line);border-radius:10px;background:#fff;transition:transform .15s var(--ease),box-shadow .15s var(--ease),border-color .15s var(--ease)}
+.ph:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(80,110,100,.15);border-color:var(--accent)}
+.ph.check{border:2px solid var(--red)}
+.ph.sel{box-shadow:0 0 0 3px var(--orange)}
+.tag{background:var(--red)}
+.sec.excl{border:1.5px solid var(--red);background:repeating-linear-gradient(45deg,#fdf5f3,#fdf5f3 12px,#f9e9e6 12px,#f9e9e6 24px)}
+.sec.excl h3{color:var(--red)} .sec.excl .exnote{color:#9a4338}
+.flash{outline-color:var(--orange)!important;background:#fdf3e6}
+.wordpane{background:#c3d3cd}
+.pane{border-radius:14px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(80,110,100,.06)}
+.secpane{background:var(--bg)}
+.pvstate{color:var(--brand)}
+.sum{background:var(--soft);border-left-color:var(--brand2);border-radius:10px} .sum b{color:var(--brand)}
+.vok{background:#eaf6f0;border-left-color:#4c7a73;color:var(--brand-d);border-radius:10px}
+.vbad{background:#fcf1ef;border-left-color:var(--red);color:#8f3328;border-radius:10px}
+.cleannote{color:#b5701f}
+.err{color:var(--red)}
+.ph select,select{border:1px solid var(--soft2);border-radius:6px;background:#fff;color:var(--ink);font-family:inherit}
+/* 사용법 */
+.gintro{background:var(--soft);border:1px solid var(--soft2);border-radius:12px}
+.gnum{background:linear-gradient(135deg,var(--brand),var(--accent))}
+.gstep b{color:var(--brand-d)}
+.gstep{border-top-color:var(--line)}
+.btnlike{border-color:var(--brand2);color:var(--brand);border-radius:6px}
+.btnlike.fill{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+.gfig{border-color:var(--line);border-radius:12px;transition:transform .15s var(--ease),box-shadow .15s var(--ease),border-color .15s var(--ease)}
+.gfig:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(80,110,100,.22);transform:translateY(-2px)}
+.gfig::after{background:rgba(44,62,57,.85)}
+.gtip{background:#fdf6ec;border-left-color:var(--orange);border-radius:8px}
+.gfaq details{border-color:var(--line);border-radius:10px;transition:background .15s var(--ease)}
+.gfaq details[open]{background:#fbfdfc}
+.gfaq summary{color:var(--brand-d)}
+.kbd{border-color:var(--soft2)}
+#lb{background:rgba(19,39,32,.88)}
+#lb .nav:hover,#lbClose:hover{background:var(--brand2)}
+#cf .box{border-top-color:var(--red);border-radius:16px}
+#cfYes{background:linear-gradient(135deg,#c2574a,#b0473b);box-shadow:0 4px 14px rgba(194,87,74,.28)}
+#cfNo{background:#f0f4f2;color:var(--ink);box-shadow:none;border:1.5px solid var(--soft2)}
+#cfNo:hover:not(:disabled){background:var(--soft);border-color:var(--brand2)}
+button.back{border-color:#f0d3ad;color:#a8641a}
+button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);color:#8a4f12}
+/* 움직임: 화면이 바뀔 때 살짝 떠오르며 나타남 */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#step1:not(.hidden),#step2:not(.hidden),#done:not(.hidden),#guide{animation:fadeUp .45s var(--ease) both}
+#cf.on .box{animation:fadeUp .25s var(--ease) both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -149,8 +250,8 @@ label{cursor:pointer}
 
   <div class="gstep"><h3><span class="gnum">1</span>워드 파일 넣기</h3>
     <p><span class="btnlike">파일 선택</span>을 눌러 <b>사진 넣기 전 워드</b>를 고르세요. 파일을 칸 안으로 끌어다 놓아도 됩니다.</p>
-    <p>잘못 골랐으면 <span class="btnlike" style="color:#d93f3f;border-color:#d93f3f">취소</span>를 누르고 다시 고르면 돼요.</p>
-    <figure class="gfig" data-cap="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]."><img src="./guide/g1.jpg?v=20261108e" alt="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]." loading="lazy"></figure>
+    <p>잘못 골랐으면 <span class="btnlike" style="color:#c2574a;border-color:#c2574a">취소</span>를 누르고 다시 고르면 돼요.</p>
+    <figure class="gfig" data-cap="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]."><img src="./guide/g1.jpg?v=20261108g" alt="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]." loading="lazy"></figure>
     <div class="gtip">💡 예전에 이 사이트로 사진을 넣었던 워드를 다시 넣어도 괜찮아요. 들어 있던 사진·계통도는 <b>자동으로 지우고 새로</b> 넣습니다.</div>
   </div>
 
@@ -158,7 +259,7 @@ label{cursor:pointer}
     <ul><li>몇 장만 넣을 때: <b>사진 파일</b> 줄의 <span class="btnlike">파일 선택</span> → <span class="kbd">Ctrl</span>을 누른 채 여러 장 클릭(전부는 <span class="kbd">Ctrl</span>+<span class="kbd">A</span>)</li>
     <li>폴더째 넣을 때: <b>사진 폴더</b> 줄의 <span class="btnlike">폴더 선택</span> → 폴더 고르기 → 브라우저가 "업로드할까요?" 물으면 <b>업로드</b> (사진은 내 PC 밖으로 나가지 않아요)</li>
     <li>줄마다 <b>취소</b>가 따로 있어서 잘못 넣은 쪽만 지울 수 있어요.</li></ul>
-    <figure class="gfig" data-cap="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]."><img src="./guide/g2.jpg?v=20261108e" alt="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]." loading="lazy"></figure>
+    <figure class="gfig" data-cap="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]."><img src="./guide/g2.jpg?v=20261108g" alt="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">3</span>넣은 사진 확인하기</h3>
@@ -168,47 +269,47 @@ label{cursor:pointer}
 
   <div class="gstep"><h3><span class="gnum">4</span>자동 분류 시작</h3>
     <p><span class="btnlike fill">자동 분류 시작</span>을 누르면 막대에 진행률(%)·속도·남은 시간이 나와요.</p>
-    <figure class="gfig" data-cap="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다."><img src="./guide/g3.jpg?v=20261108e" alt="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다."><img src="./guide/g3.jpg?v=20261108g" alt="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다." loading="lazy"></figure>
     <div class="gtip">⏱ 처음 한 번만 분류 엔진을 받느라 1~2분 걸리고, 다음부터는 바로 시작돼요.</div>
   </div>
 
   <div class="gstep"><h3><span class="gnum">5</span>결과 화면 보는 법</h3>
     <ul><li><b>왼쪽</b> = 완성될 워드 미리보기 (마우스로 끌거나 휠로 위아래 이동)</li>
     <li><b>오른쪽</b> = 1-1 케이블 ~ 1-10 통신 접지까지 항목별로 나뉜 사진</li>
-    <li><b style="color:#d93f3f">빨간 테두리</b> 사진은 자동 분류가 헷갈린 사진이에요. <b>꼭 눈으로 확인</b>하세요.</li></ul>
-    <figure class="gfig" data-cap="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다."><img src="./guide/g4.jpg?v=20261108e" alt="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다." loading="lazy"></figure>
+    <li><b style="color:#c2574a">빨간 테두리</b> 사진은 자동 분류가 헷갈린 사진이에요. <b>꼭 눈으로 확인</b>하세요.</li></ul>
+    <figure class="gfig" data-cap="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다."><img src="./guide/g4.jpg?v=20261108g" alt="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">6</span>잘못 들어간 사진 옮기기</h3>
     <ul><li><b>방법 1</b>: 사진 아래 <b>선택 상자</b>에서 맞는 항목 고르기</li>
     <li><b>방법 2</b>: 사진을 <b>끌어서</b> 맞는 항목 칸에 놓기</li></ul>
-    <p>옮기면 왼쪽 워드가 <b>바로 바뀌고</b>, 위에 <b style="color:#1f6feb">✓ 미리보기 최신</b>이 나오면 반영 끝이에요.</p>
-    <figure class="gfig" data-cap="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다."><img src="./guide/g5.jpg?v=20261108e" alt="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다." loading="lazy"></figure>
+    <p>옮기면 왼쪽 워드가 <b>바로 바뀌고</b>, 위에 <b style="color:#3f6f66">✓ 미리보기 최신</b>이 나오면 반영 끝이에요.</p>
+    <figure class="gfig" data-cap="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다."><img src="./guide/g5.jpg?v=20261108g" alt="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다." loading="lazy"></figure>
     <div class="gtip">↩ 빨간 사진을 옮겼다가 원래 칸으로 되돌리면 빨간 표시도 다시 생겨서, 확인할 사진을 놓치지 않아요.</div>
   </div>
 
   <div class="gstep"><h3><span class="gnum">7</span>사진이 워드 어디에 들어갔는지 보기</h3>
-    <p>오른쪽 사진을 <b>한 번 누르면</b> 왼쪽 워드가 그 사진 칸으로 이동하고 <b style="color:#ff6a00">주황색</b>으로 표시돼요. 반대로 왼쪽 워드의 사진을 누르면 오른쪽에서 그 사진을 찾아 줍니다.</p>
-    <figure class="gfig" data-cap="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다."><img src="./guide/g6.jpg?v=20261108e" alt="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다." loading="lazy"></figure>
+    <p>오른쪽 사진을 <b>한 번 누르면</b> 왼쪽 워드가 그 사진 칸으로 이동하고 <b style="color:#e08a2c">주황색</b>으로 표시돼요. 반대로 왼쪽 워드의 사진을 누르면 오른쪽에서 그 사진을 찾아 줍니다.</p>
+    <figure class="gfig" data-cap="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다."><img src="./guide/g6.jpg?v=20261108g" alt="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">8</span>워드에 넣지 않을 사진</h3>
-    <p>맨 아래 <b style="color:#d93f3f">🚫 제외</b> 칸으로 옮기면 그 사진은 워드에 들어가지 않아요. 잘못 옮겼으면 다시 원래 칸으로 옮기면 됩니다.</p>
-    <figure class="gfig" data-cap="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다."><img src="./guide/g7.jpg?v=20261108e" alt="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다." loading="lazy"></figure>
+    <p>맨 아래 <b style="color:#c2574a">🚫 제외</b> 칸으로 옮기면 그 사진은 워드에 들어가지 않아요. 잘못 옮겼으면 다시 원래 칸으로 옮기면 됩니다.</p>
+    <figure class="gfig" data-cap="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다."><img src="./guide/g7.jpg?v=20261108g" alt="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">9</span>워드 만들기</h3>
     <ul><li><b>지난 회차 계통도 넣기</b>: 켜 두면 항목마다 계통도가 들어가요.</li>
     <li><b>사진을 칸에 꽉 채우기</b>: 켜면 테두리에 빈틈없이 맞춰요(가장자리가 조금 잘림). 끄면 사진 전체가 보이게 넣어요.</li>
     <li>다 됐으면 <span class="btnlike fill">③ 워드 만들기</span>를 누르세요.</li></ul>
-    <figure class="gfig" data-cap="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다."><img src="./guide/g8.jpg?v=20261108e" alt="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다."><img src="./guide/g8.jpg?v=20261108g" alt="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">10</span>완성 확인</h3>
     <p>완성 파일을 다시 열어 <b>항목마다 계통도 1개, 사진 수·순서가 화면과 같은지</b> 자동으로 검사해요.</p>
-    <ul><li><b style="color:#2e9e55">초록색 "검사 통과"</b>가 보이면 끝. 파일은 <b>다운로드 폴더</b>에 저장돼요.</li>
+    <ul><li><b style="color:#3f6f66">초록색 "검사 통과"</b>가 보이면 끝. 파일은 <b>다운로드 폴더</b>에 저장돼요.</li>
     <li>빨간색 문제가 보이면 파일을 내려받지 않아요. 그 화면을 캡처해서 담당자에게 알려 주세요.</li></ul>
-    <figure class="gfig" data-cap="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요."><img src="./guide/g9.jpg?v=20261108e" alt="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요." loading="lazy"></figure>
+    <figure class="gfig" data-cap="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요."><img src="./guide/g9.jpg?v=20261108g" alt="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요." loading="lazy"></figure>
   </div>
 
   <div class="gstep gfaq"><h3><span class="gnum">?</span>자주 묻는 질문</h3>
@@ -222,7 +323,7 @@ label{cursor:pointer}
 </div></aside>
 
 <section id="step1" class="card">
-  <h2>① 파일 올리기</h2>
+  <div class="uphead"><h2>① 파일 올리기</h2><button id="resetAll" class="resetbtn" title="선택한 워드와 현장 사진을 모두 지우고 처음부터 다시 합니다">🔄 전체 초기화</button></div>
   <div class="drop" id="dropDocx"><b>사진 넣기 전 워드(.docx)</b>
     <div class="pick"><button class="ghost sm" id="docxBtn">파일 선택</button><span class="fname none" id="docxName">선택된 파일 없음</span><button class="x" id="docxClear" hidden>취소</button></div>
     <input type="file" id="docx" accept=".docx" hidden>
@@ -267,10 +368,11 @@ label{cursor:pointer}
 <section id="done" class="card hidden">
   <h2>④ 완성</h2>
   <div id="doneMsg"></div>
-  <div class="row" style="margin-top:12px"><button id="dl">워드 다시 내려받기</button><button class="ghost" id="restart2">새 작업</button></div>
+  <div class="row" style="margin-top:12px"><button id="dl">워드 다시 내려받기</button><button class="ghost" id="restart2">🔄 새 작업 (처음부터)</button><button class="ghost back" id="goBack">↩ 뒤로가기 (수정 가능)</button></div>
 </section>
 
 </main>
+<div id="cf" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle"><div class="box"><div class="ico">⚠️</div><h3 id="cfTitle">내용을 정말 초기화 하시겠습니까?</h3><p>선택한 <b>사진 넣기 전 워드</b>와 <b>현장 사진</b>이 모두 지워지고<br>처음 화면으로 돌아갑니다. (내 PC의 원본 파일은 지워지지 않아요)</p><div class="btns"><button id="cfYes">예</button><button id="cfNo">아니오</button></div></div></div>
 <div id="lb" role="dialog" aria-label="크게 보기"><button id="lbClose">닫기 ✕ (Esc)</button><button class="nav" id="lbPrev" aria-label="이전">‹</button><img id="lbImg" alt=""><div id="lbCap"></div><div id="lbCnt"></div><button class="nav" id="lbNext" aria-label="다음">›</button></div>
 <div id="gm"><div class="gbox"><button class="ghost gclose" id="gmClose">닫기 ✕</button><div id="gmSlot"></div></div></div>
 <script>
@@ -300,7 +402,7 @@ label{cursor:pointer}
   window.closeGm = closeGm;
   document.getElementById('helpBtn').onclick = () => {
     const step1 = document.getElementById('step1');
-    if (!step1.classList.contains('hidden') && window.innerWidth > 1150) { home().scrollTo({ top: 0, behavior: 'smooth' }); home().animate([{ boxShadow: '0 0 0 4px #ff6a00' }, { boxShadow: '0 0 0 0 #ff6a00' }], 1200); }
+    if (!step1.classList.contains('hidden') && window.innerWidth > 1150) { home().scrollTo({ top: 0, behavior: 'smooth' }); home().animate([{ boxShadow: '0 0 0 4px #6fa394' }, { boxShadow: '0 0 0 0 #6fa394' }], 1200); }
     else openGm();
   };
   document.getElementById('gmClose').onclick = closeGm;
@@ -308,7 +410,7 @@ label{cursor:pointer}
 })();
 </script>
 <script type="module">
-import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108e';
+import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108g';
 
 const $ = id => document.getElementById(id);
 let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlob = null, lastName = '';
@@ -316,7 +418,7 @@ let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlo
 // ---------------------------------------------------------- 라이브러리
 (async () => {
   try {
-    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108e').then(r => r.json()), fetch('./lib_refs.json?v=20261108e').then(r => r.json())]);
+    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108g').then(r => r.json()), fetch('./lib_refs.json?v=20261108g').then(r => r.json())]);
     LIB = base;
     REFS = refs.refs.map(r => ({ k: r.k, emb: b64ToF32(r.emb) }));
     $('libinfo').textContent = `분류 기준: ${LIB.version} 회차 완성본 사진 ${REFS.length}장 · 분류 항목 1-1 ~ 1-${Object.keys(LIB.sections).length} (케이블·배관·단자함 … 통신 접지, ${Object.keys(LIB.sections).length}개)`;
@@ -332,11 +434,12 @@ const urlOf = f => { const k = keyOf(f); if (!thumbs.has(k)) thumbs.set(k, URL.c
 
 function setName(id, text, has) { const el = $(id); el.textContent = text; el.classList.toggle('none', !has); }
 function setDocx(f) {
-  docxFile = f || null;
+  docxFile = f || null; setTimeout(() => updateResetBtn && updateResetBtn(), 0);
   setName('docxName', f ? f.name : '선택된 파일 없음', !!f);
   $('docxClear').hidden = !f;
 }
 function refreshPhotos() {
+  setTimeout(() => updateResetBtn(), 0);
   const seen = new Set(); const all = [];
   for (const [f, src] of [...fromFiles.map(f => [f, '파일']), ...fromFolder.map(f => [f, '폴더'])]) {
     const k = keyOf(f); if (seen.has(k)) continue; seen.add(k); f._src = src; all.push(f);
@@ -643,8 +746,34 @@ $('build').onclick = async () => {
   $('build').disabled = false;
 };
 $('dl').onclick = async () => { if (lastBlob) $('doneMsg').querySelector('b').insertAdjacentText('afterend', ''), await offer(lastBlob, lastName); };
+// 전체 초기화: 워드·사진 선택까지 모두 비움
+function resetAll() {
+  restart();
+  setDocx(null); fromFiles = []; fromFolder = []; folderName = '';
+  for (const u of thumbs.values()) URL.revokeObjectURL(u); thumbs.clear();
+  refreshPhotos(); show(0, ''); $('pinfo').innerHTML = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateResetBtn();
+}
+function updateResetBtn() { $('resetAll').disabled = !docxFile && !fromFiles.length && !fromFolder.length; }
+function askReset() {
+  const cf = $('cf'); cf.classList.add('on'); $('cfNo').focus();
+  const done = yes => { cf.classList.remove('on'); document.removeEventListener('keydown', key, true); if (yes) resetAll(); };
+  const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+  document.addEventListener('keydown', key, true);
+  $('cfYes').onclick = () => done(true); $('cfNo').onclick = () => done(false);
+  cf.onclick = e => { if (e.target === cf) done(false); };
+}
+$('resetAll').onclick = askReset;
+updateResetBtn();
 const restart = () => { items = []; pvMap = new Map(); smallCache.clear(); $('cleanNote').textContent = ''; $('dl').classList.remove('hidden'); document.querySelector('main').classList.remove('wide'); $('wordView').innerHTML = ''; $('done').classList.add('hidden'); $('step2').classList.add('hidden'); $('step1').classList.remove('hidden'); $('start').disabled = false; $('start').textContent = '자동 분류 시작'; $('prog').style.display = 'none'; };
-$('restart').onclick = restart; $('restart2').onclick = restart;
+// 완성 화면 → 분류 화면으로 되돌아가서 계속 수정
+$('goBack').onclick = () => {
+  $('done').classList.add('hidden'); $('step2').classList.remove('hidden');
+  document.querySelector('main').classList.add('wide'); $('binfo').textContent = '';
+  window.scrollTo(0, 0); schedulePreview(null);
+};
+$('restart').onclick = restart; $('restart2').onclick = () => { resetAll(); $('resetAll').classList.remove('pulse'); };
 // 자체 검사(테스트용): 미리보기의 각 항목 사진이 화면 배치와 픽셀 단위로 같은지
 async function selfCheckPreview() {
   const errs = [];
