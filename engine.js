@@ -1,5 +1,5 @@
 // 감독일지 사진 자동 첨부 — 브라우저 엔진 (사진은 이 PC 밖으로 나가지 않음)
-import * as ort from './ort.wasm.bundle.min.mjs';
+import * as ort from './ort.wasm.bundle.min.mjs?v=20261108d';
 
 const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
 let session = null;
@@ -248,6 +248,7 @@ function importDiagram(doc, pkg, d) {
   return el;
 }
 
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 function photoTableXml(cells, box) {
   const { cols, cw, w: boxW, h: boxH } = box;
   const rows = [];
@@ -259,7 +260,7 @@ function photoTableXml(cells, box) {
       if (it) {
         const sc = Math.min(boxW / it.w, boxH / it.h);
         const cx = Math.round(it.w * sc), cy = Math.round(it.h * sc);
-        run = `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="사진"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="photo.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${it.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+        run = `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="sitelog-photo" descr="${esc(it.label || '')}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="photo.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${it.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
       }
       r += `<w:tc><w:tcPr><w:tcW w:w="${cw}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr>${i < Math.ceil(cells.length / cols) - 1 ? '<w:keepNext/>' : ''}<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:ind w:left="0" w:right="0" w:firstLine="0"/><w:jc w:val="center"/></w:pPr>${run}</w:p></w:tc>`;
     }
@@ -267,6 +268,65 @@ function photoTableXml(cells, box) {
   }
   const b = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(x => `<w:${x} w:val="single" w:sz="4" w:space="0" w:color="000000"/>`).join('');
   return `<w:tbl xmlns:w="${NS.w}" xmlns:r="${NS.r}" xmlns:wp="${NS.wp}" xmlns:a="${NS.a}" xmlns:pic="${NS.pic}"><w:tblPr><w:tblW w:w="${cw * cols}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>${b}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${('<w:gridCol w:w="' + cw + '"/>').repeat(cols)}</w:tblGrid>${rows.join('')}</w:tbl>`;
+}
+
+function diagramPreviewXml(rid, wPx, hPx) {
+  // 미리보기 전용: 계통도 그림(제목줄·테두리 포함)을 그대로 보여 줌. 실제 워드에는 원본 도형 계통도가 들어감
+  const W = 8926, cx = Math.round(W * 635), cy = Math.round(cx * hPx / wPx);
+  return `<w:tbl xmlns:w="${NS.w}" xmlns:r="${NS.r}" xmlns:wp="${NS.wp}" xmlns:a="${NS.a}" xmlns:pic="${NS.pic}"><w:tblPr><w:tblW w:w="${W}" w:type="dxa"/><w:jc w:val="center"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${W}"/></w:tblGrid>`
+    + `<w:tr><w:tc><w:tcPr><w:tcW w:w="${W}" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="sitelog-diagram"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="d.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p></w:tc></w:tr></w:tbl>`;
+}
+
+// 이미 사진·계통도가 들어간 워드를 다시 올렸을 때: 기존 것을 먼저 지움 (중복 방지)
+const hasPic = el => el.getElementsByTagNameNS(NS.w, 'drawing').length + el.getElementsByTagNameNS(NS.w, 'pict').length + el.getElementsByTagNameNS('urn:schemas-microsoft-com:vml', 'shape').length > 0;
+const blipCount = el => el.getElementsByTagNameNS(NS.a, 'blip').length;
+function isEmptyP(el) { return el && el.nodeType === 1 && el.localName === 'p' && el.namespaceURI === NS.w && !text(el) && !hasPic(el); }
+function cleanSection(s) {
+  let diagrams = 0, photos = 0;
+  for (const tbl of s.els) {
+    if (tbl.localName !== 'tbl' || !tbl.parentNode) continue;
+    const trs = kids(tbl, 'tr'); const drop = new Set();
+    trs.forEach((tr, i) => {
+      if (drop.has(tr)) return;
+      const t = text(tr);
+      if (t.startsWith(DIAG_KEY)) { drop.add(tr); diagrams++; if (trs[i + 1]) drop.add(trs[i + 1]); return; }
+      if (!t && hasPic(tr)) { drop.add(tr); photos += blipCount(tr); }
+    });
+    if (!drop.size) continue;
+    if (drop.size === trs.length) {
+      let nx = tbl.nextSibling; while (nx && nx.nodeType !== 1) nx = nx.nextSibling;
+      if (isEmptyP(nx)) nx.parentNode.removeChild(nx);
+      tbl.parentNode.removeChild(tbl);
+    } else drop.forEach(tr => tr.parentNode.removeChild(tr));
+  }
+  return { diagrams, photos };
+}
+
+// 완성된 워드를 다시 읽어서 항목별로 계통도/사진 수와 순서가 맞는지 검사
+export async function verifyDocx(blob, expected, withDiagrams) {
+  const zip = await JSZip.loadAsync(blob);
+  const doc = parse(await zip.file('word/document.xml').async('string'));
+  const body = doc.getElementsByTagNameNS(NS.w, 'body')[0];
+  const problems = [], rows = [];
+  for (const s of findSections(body)) {
+    let diag = 0; const names = []; let foreign = 0;
+    for (const el of s.els) {
+      if (el.localName !== 'tbl') continue;
+      for (const tr of kids(el, 'tr')) if (text(tr).startsWith(DIAG_KEY)) diag++;
+      for (const dp of el.getElementsByTagNameNS(NS.wp, 'docPr')) {
+        const nm = dp.getAttribute('name') || '';
+        if (nm === 'sitelog-photo') names.push(dp.getAttribute('descr') || '');
+      }
+    }
+    const exp = expected[s.k] || [];
+    const wantDiag = withDiagrams ? 1 : 0;
+    const okDiag = withDiagrams ? diag === 1 : diag <= 1;
+    const okPhotos = names.length === exp.length && names.every((n, i) => n === exp[i]);
+    if (!okDiag) problems.push(`1-${s.k}: 계통도 ${diag}개 (정상 ${wantDiag}개)`);
+    if (!okPhotos) problems.push(`1-${s.k}: 사진이 화면과 다름 (워드 ${names.length}장 / 화면 ${exp.length}장)`);
+    rows.push({ k: s.k, diag, photos: names.length, ok: okDiag && okPhotos });
+  }
+  return { ok: problems.length === 0, problems, rows };
 }
 
 /**
@@ -281,8 +341,11 @@ export async function assemble(blankFile, lib, assign, opts = {}) {
   const report = [];
   const secs = findSections(body);
   if (!secs.length) throw new Error("워드에서 '1 – 1. ...' 형식의 섹션 제목을 찾지 못했습니다.");
+  let cleaned = { diagrams: 0, photos: 0 };
   for (const s of secs.reverse()) {
     const info = lib.sections[String(s.k)] || {};
+    const c = cleanSection(s); cleaned.diagrams += c.diagrams; cleaned.photos += c.photos;
+    s.els = s.els.filter(el => el.parentNode);
     let anchor = null;
     outer: for (const el of s.els) {
       if (el.localName !== 'tbl') continue;
@@ -291,10 +354,16 @@ export async function assemble(blankFile, lib, assign, opts = {}) {
     if (!anchor) { report.push({ k: s.k, title: s.title, n: 0, skipped: (assign[s.k] || []).length, msg: '조치내역 표를 못 찾아 건너뜀' }); continue; }
     const add = [];
     let diag = false;
-    if (opts.diagrams !== false && info.diagram) { add.push(importDiagram(doc, pkg, info.diagram)); diag = true; }
+    if (opts.diagrams !== false && info.diagram) {
+      if (opts.preview && info.diagram.preview) {
+        const pv = info.diagram.preview;
+        add.push(doc.importNode(parse(diagramPreviewXml(pkg.addImage(b64ToBytes(pv.b64), 'png'), pv.w, pv.h)).documentElement, true));
+      } else add.push(importDiagram(doc, pkg, info.diagram));
+      diag = true;
+    }
     const photos = assign[s.k] || [];
     if (photos.length) {
-      const cells = photos.map(p => ({ rid: pkg.addImage(p.data, 'jpg'), w: p.w, h: p.h }));
+      const cells = photos.map(p => ({ rid: pkg.addImage(p.data, 'jpg'), w: p.w, h: p.h, label: p.label }));
       add.push(doc.importNode(parse(photoTableXml(cells, boxFor(info.layout))).documentElement, true));
     }
     for (const el of add) {
@@ -312,5 +381,5 @@ export async function assemble(blankFile, lib, assign, opts = {}) {
   pkg.save();
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE',
     mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-  return { blob, report: report.sort((a, b) => a.k - b.k) };
+  return { blob, report: report.sort((a, b) => a.k - b.k), cleaned };
 }

@@ -4,8 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
-<script src="./jszip.min.js"></script>
-<script src="./docx-preview.min.js"></script>
+<script src="./jszip.min.js?v=20261108d"></script>
+<script src="./docx-preview.min.js?v=20261108d"></script>
+<script>
+// 프로그램이 멈추면 화면에 이유를 보여줌 (버튼이 안 눌리는 상태로 조용히 멈추지 않게)
+window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span style="color:#d93f3f">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, true);
+setTimeout(() => { const el = document.getElementById('libinfo'); if (el && el.textContent.includes('불러오는 중')) el.innerHTML = '<span style="color:#d93f3f">페이지를 불러오지 못했습니다. Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, 20000);
+</script>
 <style>
 :root{--blue:#1f6feb;--navy:#1f3a5f;--line:#d8dde6;--bg:#f4f5f7;--red:#d93f3f}
 *{box-sizing:border-box}
@@ -20,11 +25,18 @@ main.wide{max-width:none;margin:12px 0;padding:0 14px}
 .wordpane.dragging{cursor:grabbing;user-select:none}
 .wordpane .docx-wrapper{background:transparent!important;padding:14px 0!important}
 .wordpane .docx-wrapper>section.docx{box-shadow:0 2px 8px #0005;margin-bottom:14px!important}
-.wordpane img{pointer-events:none}
+.wordpane img{-webkit-user-drag:none;user-select:none}
 .wordbar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#444;margin:0 0 6px}
 .wordbar button{padding:3px 10px;font-size:12px}
 .pvstate{font-size:12px;color:#1f6feb}
-.flash{outline:4px solid #ffb02e;outline-offset:2px;transition:outline-color 1.2s}
+.flash{outline:5px solid #ff7a00!important;outline-offset:-3px;background:#fff3e0}
+.ph.sel{box-shadow:0 0 0 3px #ff7a00}
+.ph{cursor:pointer}
+#wordView td img[data-pid]{cursor:pointer}
+.vok{background:#e8f6ec;border-left:4px solid #2e9e55;padding:10px 14px;border-radius:6px;margin-bottom:10px;color:#1d6b39;font-weight:bold}
+.vbad{background:#fdecec;border-left:4px solid var(--red);padding:10px 14px;border-radius:6px;margin-bottom:10px;color:#a32020}
+.cleannote{font-size:12px;color:#b45309;margin:-2px 0 6px}
+.cleannote:empty{display:none}
 .secpane{padding:10px;background:#f4f5f7;box-shadow:none}
 .card{background:#fff;border-radius:8px;padding:18px 22px;margin-bottom:16px;box-shadow:0 1px 3px #0002}
 h2{font-size:16px;margin:0 0 12px}
@@ -116,8 +128,9 @@ label{cursor:pointer}
   </div>
   <div class="split">
     <div>
-      <div class="wordbar"><span>📄 워드 미리보기 <span class="muted">(마우스로 끌거나 휠로 위아래 이동 · 사진을 옮기면 바로 반영)</span></span>
+      <div class="wordbar"><span>📄 워드 미리보기 <span class="muted">(끌거나 휠로 이동 · 오른쪽 사진을 누르면 그 위치로 이동)</span></span>
         <span><span class="pvstate" id="pvState"></span> <button class="ghost" id="zOut">－</button> <span id="zVal">맞춤</span> <button class="ghost" id="zIn">＋</button> <button class="ghost" id="zFit">맞춤</button></span></div>
+      <div class="cleannote" id="cleanNote"></div>
       <div class="pane wordpane" id="wordPane"><div id="wordView" style="padding:40px;color:#fff">워드 미리보기 준비 중…</div></div>
     </div>
     <div>
@@ -135,7 +148,7 @@ label{cursor:pointer}
 
 </main>
 <script type="module">
-import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor } from './engine.js';
+import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108d';
 
 const $ = id => document.getElementById(id);
 let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlob = null, lastName = '';
@@ -143,7 +156,7 @@ let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlo
 // ---------------------------------------------------------- 라이브러리
 (async () => {
   try {
-    const [base, refs] = await Promise.all([fetch('./lib_base.json').then(r => r.json()), fetch('./lib_refs.json').then(r => r.json())]);
+    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108d').then(r => r.json()), fetch('./lib_refs.json?v=20261108d').then(r => r.json())]);
     LIB = base;
     REFS = refs.refs.map(r => ({ k: r.k, emb: b64ToF32(r.emb) }));
     $('libinfo').textContent = `분류 기준: ${LIB.version} 회차 완성본 사진 ${REFS.length}장 · 분류 항목 1-1 ~ 1-${Object.keys(LIB.sections).length} (케이블·배관·단자함 … 통신 접지, ${Object.keys(LIB.sections).length}개)`;
@@ -245,7 +258,7 @@ $('start').onclick = async () => {
       const f = photoFiles[i];
       const bmp = await decode(f);
       const r = classify(await embed(bmp), REFS);
-      items.push({ file: f, name: f.name, url: urlOf(f), ...r, origSection: r.section, origStatus: r.status });
+      items.push({ id: i, file: f, name: f.name, url: urlOf(f), ...r, origSection: r.section, origStatus: r.status });
       bmp.close && bmp.close();
       const done = i + 1, rate = done / ((performance.now() - t1) / 1000);
       show(20 + 80 * done / photoFiles.length,
@@ -257,34 +270,51 @@ $('start').onclick = async () => {
   } catch (e) { console.error(e); fail('오류: ' + (e.message || e)); }
 };
 
+// ---------------------------------------------------------- 공통: 항목별 사진 순서 (화면 = 미리보기 = 워드 모두 같은 순서)
+const byName = (a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }) || a.id - b.id;
+const photosIn = k => items.filter(i => i.section === k).sort(byName);
+const itemById = id => items.find(x => x.id === +id);
+const cardById = id => document.querySelector(`.ph[data-id="${id}"]`);
+
 // ---------------------------------------------------------- 검토 화면
 function card(it) {
   const d = document.createElement('div');
-  d.className = 'ph' + (it.status === 'check' ? ' check' : ''); d.draggable = true; d.dataset.name = it.name;
-  d.title = `${it.name}\n유사도 ${it.sim} / 2순위 1-${it.second}`;
+  d.className = 'ph' + (it.status === 'check' ? ' check' : ''); d.draggable = true; d.dataset.id = it.id;
   const opts = Object.entries(LIB.sections).map(([k, v]) => `<option value="${k}">1-${k} ${v.title.slice(0, 10)}</option>`).join('') + '<option value="0">제외</option>';
-  d.innerHTML = `<img src="${it.url}" loading="lazy" alt=""><div class="nm"></div><select>${opts}</select>`;
+  d.innerHTML = `<img src="${it.url}" loading="lazy" alt="" draggable="false"><div class="nm"></div><select>${opts}</select>`;
   paintCard(d, it);
   const sel = d.querySelector('select'); sel.value = String(it.section);
   sel.onchange = () => move(d, +sel.value);
-  d.ondragstart = e => { e.dataTransfer.setData('text/plain', it.name); };
+  sel.onclick = e => e.stopPropagation();
+  d.ondragstart = e => { e.dataTransfer.setData('text/plain', String(it.id)); };
+  // 사진을 한 번 누르면 왼쪽 워드에서 그 사진 위치로 이동
+  d.onclick = () => focusPhoto(it.id);
   return d;
 }
 // 확인 표시: 처음 자동 분류된 자리(확인 필요였던 곳)로 돌아오면 다시 빨간 표시
 function paintCard(d, it) {
   d.classList.toggle('check', it.status === 'check');
   d.querySelector('.nm').innerHTML = `${it.name} ${it.status === 'check' ? '<span class="tag">확인</span>' : ''}`;
-  d.title = `${it.name}\n유사도 ${it.sim} / 2순위 1-${it.second}` + (it.origStatus === 'check' ? `\n처음 분류: 1-${it.origSection} (확인 필요)` : '');
+  d.title = `${it.name}\n누르면 왼쪽 워드에서 이 사진 위치로 이동\n유사도 ${it.sim} / 2순위 1-${it.second}` + (it.origStatus === 'check' ? `\n처음 분류: 1-${it.origSection} (확인 필요)` : '');
+}
+function placeCard(d, k) {
+  const grid = document.querySelector(`.sec[data-k="${k}"] .grid`);
+  const me = itemById(d.dataset.id);
+  const after = Array.from(grid.children).find(c => c !== d && byName(itemById(c.dataset.id), me) > 0);
+  grid.insertBefore(d, after || null);
 }
 function move(d, k) {
-  const it = items.find(x => x.name === d.dataset.name); it.section = k;
+  const it = itemById(d.dataset.id); if (!it) return;
+  it.section = k;
   it.status = (it.origStatus === 'check' && k === it.origSection) ? 'check' : 'ok';
   paintCard(d, it);
   d.querySelector('select').value = String(k);
-  // 섹션 안에서는 파일명 순서 유지
-  const grid = document.querySelector(`.sec[data-k="${k}"] .grid`);
-  const after = Array.from(grid.children).find(c => c.dataset.name.localeCompare(d.dataset.name, 'ko', { numeric: true }) > 0);
-  grid.insertBefore(d, after || null); counts(); schedulePreview(k);
+  placeCard(d, k); counts(); selectCard(it.id);
+  schedulePreview(k > 0 ? it.id : null);
+}
+function selectCard(id) {
+  document.querySelectorAll('.ph.sel').forEach(c => c.classList.remove('sel'));
+  const c = cardById(id); if (c) c.classList.add('sel');
 }
 function counts() {
   document.querySelectorAll('.sec').forEach(s => s.querySelector('.cnt').textContent = s.querySelectorAll('.ph').length);
@@ -299,24 +329,24 @@ function renderReview() {
     s.innerHTML = `<h3>${title} <span class="muted">(<span class="cnt">0</span>장)</span>${k === '0' ? '<span class="exnote">여기로 옮긴 사진은 완성 워드에 들어가지 않습니다. 잘못 옮겼다면 다시 원래 칸으로 끌어다 놓으세요.</span>' : ''}</h3><div class="grid"></div>`;
     s.ondragover = e => { e.preventDefault(); s.classList.add('over'); };
     s.ondragleave = () => s.classList.remove('over');
-    s.ondrop = e => { e.preventDefault(); s.classList.remove('over'); const n = e.dataTransfer.getData('text/plain'); const d = document.querySelector(`.ph[data-name="${CSS.escape(n)}"]`); if (d) move(d, +k); };
+    s.ondrop = e => { e.preventDefault(); s.classList.remove('over'); const d = cardById(e.dataTransfer.getData('text/plain')); if (d) move(d, +k); };
     box.appendChild(s);
-    for (const it of items.filter(i => String(i.section) === k)) s.querySelector('.grid').appendChild(card(it));
+    for (const it of photosIn(+k)) s.querySelector('.grid').appendChild(card(it));
   }
   counts(); document.querySelector('main').classList.add('wide'); window.scrollTo(0, 0); schedulePreview(null);
 }
 
 // ---------------------------------------------------------- 실시간 워드 미리보기
 const smallCache = new Map();
+function aspectFor(k) { const box = boxFor((LIB.sections[String(k)] || {}).layout); return $('optFill').checked ? box.w / box.h : null; }
 async function smallImg(it) {
-  const box = boxFor((LIB.sections[String(it.section)] || {}).layout);
-  const aspect = $('optFill').checked ? box.w / box.h : null;
-  const key = it.name + '|' + (aspect ? aspect.toFixed(4) : 'fit');
+  const aspect = aspectFor(it.section);
+  const key = it.id + '|' + (aspect ? aspect.toFixed(4) : 'fit');
   if (!smallCache.has(key)) { const b = await decode(it.file); smallCache.set(key, await prepJpeg(b, 520, aspect)); b.close && b.close(); }
-  return smallCache.get(key);
+  return { ...smallCache.get(key), label: it.name };
 }
-let pvTimer = null, pvBusy = false, pvAgain = false, pvFocus = null, zoom = null;
-function schedulePreview(k) { pvFocus = k; clearTimeout(pvTimer); pvTimer = setTimeout(renderPreview, 350); }
+let pvTimer = null, pvBusy = false, pvAgain = false, pvFocus = null, zoom = null, pvMap = new Map(), pvVersion = 0, pvShown = -1;
+function schedulePreview(id) { pvFocus = id; pvVersion++; $('pvState').textContent = '미리보기 갱신 대기…'; clearTimeout(pvTimer); pvTimer = setTimeout(renderPreview, 300); }
 function fitZoom() {
   const w = document.querySelector('#wordView section.docx'); if (!w) return;
   const z = zoom || Math.min(1, ($("wordPane").clientWidth - 30) / w.offsetWidth);
@@ -325,46 +355,69 @@ function fitZoom() {
 async function renderPreview() {
   if (!docxFile || !items.length) return;
   if (pvBusy) { pvAgain = true; return; }
-  pvBusy = true; $('pvState').textContent = '미리보기 갱신 중…';
+  pvBusy = true; const ver = pvVersion; $('pvState').textContent = '미리보기 갱신 중…';
   try {
+    // 화면 상태를 그대로 찍어 둠 (갱신 중에 또 옮겨도 다음 갱신에서 반영)
+    const snap = {};
+    for (const k of Object.keys(LIB.sections).map(Number)) snap[k] = photosIn(k).map(i => i.id);
     const assign = {};
-    for (const it of [...items].sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true })))
-      if (it.section > 0) (assign[it.section] = assign[it.section] || []).push(await smallImg(it));
-    const { blob } = await assemble(docxFile, LIB, assign, { diagrams: $('optDiag').checked });
+    for (const [k, ids] of Object.entries(snap)) if (ids.length) assign[k] = await Promise.all(ids.map(id => smallImg(itemById(id))));
+    const { blob, cleaned } = await assemble(docxFile, LIB, assign, { diagrams: $('optDiag').checked, preview: true });
     const pane = $('wordPane'), keep = pane.scrollTop, focus = pvFocus;
     const tmp = document.createElement('div');
     await docx.renderAsync(blob, tmp, null, { inWrapper: true, breakPages: true, ignoreLastRenderedPageBreak: true, useBase64URL: true, renderHeaders: false, renderFooters: false });
     $('wordView').style.padding = '0'; $('wordView').replaceChildren(...tmp.childNodes);
     fitZoom();
-    if (focus) scrollToSection(focus); else pane.scrollTop = keep;
-    $('pvState').textContent = '';
-  } catch (e) { console.error(e); $('pvState').innerHTML = '<span class="err">미리보기 오류: ' + (e.message || e) + '</span>'; }
+    pvMap = mapPreviewImages(snap);
+    pvShown = ver;
+    if (focus !== null && focus !== undefined) focusPhoto(focus, true); else pane.scrollTop = keep;
+    $('pvState').textContent = ver === pvVersion ? '✓ 미리보기 최신' : '미리보기 갱신 중…';
+    if (cleaned && (cleaned.photos || cleaned.diagrams)) $('cleanNote').innerHTML = `⚠ 올린 워드에 이미 들어 있던 계통도 ${cleaned.diagrams}개 · 사진 ${cleaned.photos}장은 지우고 새로 넣습니다 (중복 방지)`;
+  } catch (e) { console.error(e); pvShown = ver; $('pvState').innerHTML = '<span class="err">미리보기 오류: ' + (e.message || e) + '</span>'; }
   pvBusy = false;
-  if (pvAgain) { pvAgain = false; renderPreview(); }
+  if (pvAgain || pvVersion !== pvShown) { pvAgain = false; if (pvVersion !== pvShown) renderPreview(); }
 }
-// 옮긴 항목의 사진 위치로 미리보기 이동
-function scrollToSection(k) {
-  const view = $('wordView'), pane = $('wordPane');
-  const re = new RegExp('^\\s*1\\s*[–\\-]\\s*' + k + '\\s*\\.');
-  const head = Array.from(view.querySelectorAll('p')).find(p => re.test(p.textContent));
-  if (!head) return;
-  let target = head;
-  const next = Array.from(view.querySelectorAll('img')).filter(im => head.compareDocumentPosition(im) & Node.DOCUMENT_POSITION_FOLLOWING);
-  const nextHead = Array.from(view.querySelectorAll('p')).find(p => (head.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING) && /^\s*1\s*[–\-]\s*\d+\s*\./.test(p.textContent));
-  const imgs = next.filter(im => !nextHead || (im.compareDocumentPosition(nextHead) & Node.DOCUMENT_POSITION_FOLLOWING));
-  const lastImg = imgs[imgs.length - 1];
-  if (lastImg) target = lastImg.closest('table') || lastImg;
-  const z = parseFloat(view.style.zoom) || 1;
-  pane.scrollTop = Math.max(0, (target.getBoundingClientRect().top - pane.getBoundingClientRect().top) + pane.scrollTop - 40);
-  target.classList.add('flash'); setTimeout(() => target.classList.remove('flash'), 1400);
+// 미리보기 속 사진 ↔ 화면 사진 연결: 항목 제목 다음~다음 항목 제목 전까지의 사진 중 마지막 N장이 그 항목 사진표
+const SEC_HEAD = /^\s*1\s*[–\-]\s*(\d+)\s*\./;
+function mapPreviewImages(snap) {
+  const view = $('wordView'), map = new Map();
+  const heads = Array.from(view.querySelectorAll('p')).map(p => { const m = p.textContent.match(SEC_HEAD); return m && p.textContent.trim().length < 60 ? { k: +m[1], p } : null; }).filter(Boolean);
+  const imgs = Array.from(view.querySelectorAll('img'));
+  heads.forEach((h, i) => {
+    const next = heads[i + 1];
+    const inSec = imgs.filter(im => (h.p.compareDocumentPosition(im) & Node.DOCUMENT_POSITION_FOLLOWING) && (!next || (im.compareDocumentPosition(next.p) & Node.DOCUMENT_POSITION_FOLLOWING)));
+    const ids = snap[h.k] || [];
+    const photos = inSec.slice(inSec.length - ids.length);
+    ids.forEach((id, j) => { if (photos[j]) { map.set(id, photos[j]); photos[j].dataset.pid = id; photos[j].title = itemById(id)?.name || ''; } });
+  });
+  return map;
 }
-// 마우스로 끌어서 위아래 이동
+function focusPhoto(id, fromRender) {
+  selectCard(id);
+  const it = itemById(id); if (!it) return;
+  const pane = $('wordPane');
+  const img = pvMap.get(+id);
+  if (!img) { if (!fromRender && it.section === 0) $('pvState').textContent = '제외된 사진은 워드에 없습니다'; return; }
+  const cell = img.closest('td') || img;
+  pane.scrollTop = Math.max(0, (cell.getBoundingClientRect().top - pane.getBoundingClientRect().top) + pane.scrollTop - 80);
+  document.querySelectorAll('#wordView .flash').forEach(e => e.classList.remove('flash'));
+  cell.classList.add('flash'); setTimeout(() => cell.classList.remove('flash'), 2000);
+}
+// 미리보기 속 사진을 누르면 오른쪽에서 그 사진 카드로 이동
+$('wordView').addEventListener('click', e => {
+  const im = e.target.closest ? e.target.closest('td') : null; if (!im) return;
+  const img = im.querySelector('img[data-pid]'); if (!img) return;
+  const c = cardById(img.dataset.pid); if (!c) return;
+  selectCard(img.dataset.pid); c.scrollIntoView({ block: 'center', behavior: 'smooth' });
+});
+// 마우스로 끌어서 위아래 이동 (조금만 움직이면 클릭으로 처리)
 (() => {
-  const pane = $('wordPane'); let y0 = null, s0 = 0;
-  pane.addEventListener('pointerdown', e => { if (e.button !== 0) return; y0 = e.clientY; s0 = pane.scrollTop; pane.classList.add('dragging'); pane.setPointerCapture(e.pointerId); });
-  pane.addEventListener('pointermove', e => { if (y0 === null) return; pane.scrollTop = s0 - (e.clientY - y0); });
-  const end = e => { y0 = null; pane.classList.remove('dragging'); };
-  pane.addEventListener('pointerup', end); pane.addEventListener('pointercancel', end);
+  const pane = $('wordPane'); let y0 = null, s0 = 0, moved = false;
+  pane.addEventListener('pointerdown', e => { if (e.button !== 0) return; y0 = e.clientY; s0 = pane.scrollTop; moved = false; });
+  pane.addEventListener('pointermove', e => { if (y0 === null) return; if (Math.abs(e.clientY - y0) > 4) { moved = true; pane.classList.add('dragging'); } if (moved) pane.scrollTop = s0 - (e.clientY - y0); });
+  const end = () => { y0 = null; pane.classList.remove('dragging'); };
+  pane.addEventListener('pointerup', end); pane.addEventListener('pointerleave', end); pane.addEventListener('pointercancel', end);
+  pane.addEventListener('click', e => { if (moved) { e.stopPropagation(); moved = false; } }, true);
 })();
 $('zIn').onclick = () => { zoom = Math.min(2, (parseFloat($('wordView').style.zoom) || 1) + 0.1); fitZoom(); };
 $('zOut').onclick = () => { zoom = Math.max(0.3, (parseFloat($('wordView').style.zoom) || 1) - 0.1); fitZoom(); };
@@ -386,7 +439,6 @@ async function offer(blob, name) {
       if (e && e.code === 'rate_limited') return '이미 저장 확인 창이 열려 있습니다. 잠시 후 다시 누르세요.';
     }
   }
-  // 다른 곳(사내 서버, Vercel 등)에 올렸을 때를 위한 일반 다운로드
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   return '다운로드 폴더를 확인하세요.';
@@ -395,33 +447,70 @@ async function offer(blob, name) {
 $('build').onclick = async () => {
   $('build').disabled = true; $('binfo').textContent = '워드 만드는 중…';
   try {
-    const assign = {};
-    const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name));
-    const use = sorted.filter(i => i.section > 0);
-    for (let i = 0; i < use.length; i++) {
-      const it = use[i];
-      $('binfo').textContent = `사진 정리 중 ${i + 1} / ${use.length}`;
-      const bmp = await decode(it.file);
-      const box = boxFor((LIB.sections[String(it.section)] || {}).layout);
-      (assign[it.section] = assign[it.section] || []).push(await prepJpeg(bmp, 1400, $('optFill').checked ? box.w / box.h : null));
-      bmp.close && bmp.close();
+    const keys = Object.keys(LIB.sections).map(Number);
+    const total = keys.reduce((a, k) => a + photosIn(k).length, 0);
+    const assign = {}, expected = {}; let n = 0;
+    for (const k of keys) {
+      const list = photosIn(k); if (!list.length) continue;
+      assign[k] = []; expected[k] = list.map(i => i.name);
+      for (const it of list) {
+        $('binfo').textContent = `사진 정리 중 ${++n} / ${total}`;
+        const bmp = await decode(it.file);
+        assign[k].push({ ...(await prepJpeg(bmp, 1400, aspectFor(k))), label: it.name });
+        bmp.close && bmp.close();
+      }
     }
     $('binfo').textContent = '워드에 넣는 중…';
-    const { blob, report } = await assemble(docxFile, LIB, assign, { diagrams: $('optDiag').checked });
-    lastBlob = blob; lastName = docxFile.name.replace(/\.docx$/i, '') + '_사진첨부.docx';
-    const msg = await offer(blob, lastName);
+    const withDiag = $('optDiag').checked;
+    const { blob, report, cleaned } = await assemble(docxFile, LIB, assign, { diagrams: withDiag });
+    // 완성 파일을 다시 열어 항목별 계통도·사진 수와 순서를 화면과 대조
+    $('binfo').textContent = '완성 파일 검사 중…';
+    const v = await verifyDocx(blob, expected, withDiag);
+    lastBlob = blob; lastName = docxFile.name.replace(/\.docx$/i, '').replace(/_사진첨부$/, '') + '_사진첨부.docx';
+    let msg = '';
+    if (v.ok) msg = await offer(blob, lastName);
     $('step2').classList.add('hidden'); $('done').classList.remove('hidden');
-    const total = report.reduce((a, r) => a + (r.n || 0), 0), excl = items.filter(i => i.section === 0).length;
+    const inDoc = report.reduce((a, r) => a + (r.n || 0), 0), excl = items.filter(i => i.section === 0).length;
     const skipped = report.reduce((a, r) => a + (r.skipped || 0), 0);
-    $('doneMsg').innerHTML = `<div class="sum">워드에 들어간 사진 <b>총 ${total}장</b> <span class="muted">/ 올린 사진 ${items.length}장 · 제외 ${excl}장${skipped ? ` · <span class="err">못 넣은 사진 ${skipped}장</span>` : ''}</span></div>`
-      + `<b>${lastName}</b> (${(blob.size / 1048576).toFixed(1)} MB) — ${msg}<ul>${report.map(r => `<li>1-${r.k}. ${r.title}: ${r.msg}</li>`).join('')}</ul>`;
+    const check = v.ok
+      ? `<div class="vok">✔ 검사 통과 — 10개 항목 모두 계통도 ${withDiag ? '1개씩' : '없음'}, 사진 수·순서가 화면과 같습니다.</div>`
+      : `<div class="vbad">✖ 검사에서 문제가 발견되어 내려받지 않았습니다:<ul>${v.problems.map(p => `<li>${p}</li>`).join('')}</ul>이 화면을 캡처해서 알려주세요.</div>`;
+    $('doneMsg').innerHTML = check + `<div class="sum">워드에 들어간 사진 <b>총 ${inDoc}장</b> <span class="muted">/ 올린 사진 ${items.length}장 · 제외 ${excl}장${skipped ? ` · <span class="err">못 넣은 사진 ${skipped}장</span>` : ''}</span></div>`
+      + (cleaned && (cleaned.photos || cleaned.diagrams) ? `<div class="muted" style="margin:-4px 0 8px">올린 워드에 이미 있던 계통도 ${cleaned.diagrams}개 · 사진 ${cleaned.photos}장은 지우고 새로 넣었습니다.</div>` : '')
+      + `<b>${lastName}</b> (${(blob.size / 1048576).toFixed(1)} MB)${msg ? ' — ' + msg : ''}<ul>${report.map(r => `<li>1-${r.k}. ${r.title}: ${r.msg}</li>`).join('')}</ul>`;
+    $('dl').classList.toggle('hidden', !v.ok);
   } catch (e) { console.error(e); $('binfo').innerHTML = '<span class="err">오류: ' + (e.message || e) + '</span>'; }
   $('build').disabled = false;
 };
 $('dl').onclick = async () => { if (lastBlob) $('doneMsg').querySelector('b').insertAdjacentText('afterend', ''), await offer(lastBlob, lastName); };
-const restart = () => { items = []; document.querySelector('main').classList.remove('wide'); $('wordView').innerHTML = ''; $('done').classList.add('hidden'); $('step2').classList.add('hidden'); $('step1').classList.remove('hidden'); $('start').disabled = false; $('start').textContent = '자동 분류 시작'; $('prog').style.display = 'none'; };
+const restart = () => { items = []; pvMap = new Map(); smallCache.clear(); $('cleanNote').textContent = ''; $('dl').classList.remove('hidden'); document.querySelector('main').classList.remove('wide'); $('wordView').innerHTML = ''; $('done').classList.add('hidden'); $('step2').classList.add('hidden'); $('step1').classList.remove('hidden'); $('start').disabled = false; $('start').textContent = '자동 분류 시작'; $('prog').style.display = 'none'; };
 $('restart').onclick = restart; $('restart2').onclick = restart;
-window.__app = { get items() { return items; }, render: () => renderReview() };
+// 자체 검사(테스트용): 미리보기의 각 항목 사진이 화면 배치와 픽셀 단위로 같은지
+async function selfCheckPreview() {
+  const errs = [];
+  const tiny = async src => { const im = new Image(); im.src = src; await im.decode(); const c = new OffscreenCanvas(12, 12), g = c.getContext('2d'); g.drawImage(im, 0, 0, 12, 12); return g.getImageData(0, 0, 12, 12).data; };
+  const view = $('wordView');
+  const heads = Array.from(view.querySelectorAll('p')).map(p => { const m = p.textContent.match(SEC_HEAD); return m && p.textContent.trim().length < 60 ? { k: +m[1], p } : null; }).filter(Boolean);
+  const imgs = Array.from(view.querySelectorAll('img'));
+  for (let i = 0; i < heads.length; i++) {
+    const h = heads[i], next = heads[i + 1];
+    const inSec = imgs.filter(im => (h.p.compareDocumentPosition(im) & Node.DOCUMENT_POSITION_FOLLOWING) && (!next || (im.compareDocumentPosition(next.p) & Node.DOCUMENT_POSITION_FOLLOWING)));
+    const want = photosIn(h.k);
+    const diagImgs = $('optDiag').checked && LIB.sections[String(h.k)]?.diagram ? 1 : 0;
+    if (inSec.length !== want.length + diagImgs) errs.push(`1-${h.k}: 미리보기 그림 ${inSec.length}개, 기대 ${want.length + diagImgs}개`);
+    const photos = inSec.slice(inSec.length - want.length);
+    for (let j = 0; j < want.length; j++) {
+      const it = want[j], el = photos[j]; if (!el) { errs.push(`1-${h.k}: ${it.name} 없음`); continue; }
+      const a = await tiny(el.src);
+      const sm = smallCache.get(it.id + '|' + (aspectFor(h.k) ? aspectFor(h.k).toFixed(4) : 'fit'));
+      const b = await tiny(URL.createObjectURL(new Blob([sm.data], { type: 'image/jpeg' })));
+      let d = 0; for (let q = 0; q < a.length; q++) d += Math.abs(a[q] - b[q]); d /= a.length;
+      if (d > 6) errs.push(`1-${h.k}: ${j + 1}번째 칸 사진이 ${it.name}와 다름 (차이 ${d.toFixed(1)})`);
+    }
+  }
+  return errs;
+}
+window.__app = { get items() { return items; }, render: () => renderReview(), get pvState() { return $('pvState').textContent; }, selfCheck: selfCheckPreview, previewIds: () => Object.fromEntries([...pvMap.entries()].map(([id, img]) => [id, true])) };
 </script>
 </body>
 </html>
