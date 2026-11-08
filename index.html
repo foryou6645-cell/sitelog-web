@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="./jszip.min.js?v=20261108g"></script>
-<script src="./docx-preview.min.js?v=20261108g"></script>
+<script src="./jszip.min.js?v=20261108h"></script>
+<script src="./docx-preview.min.js?v=20261108h"></script>
 <script>
 // 프로그램이 멈추면 화면에 이유를 보여줌 (버튼이 안 눌리는 상태로 조용히 멈추지 않게)
 window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span style="color:#c2574a">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, true);
 setTimeout(() => { const el = document.getElementById('libinfo'); if (el && el.textContent.includes('불러오는 중')) el.innerHTML = '<span style="color:#c2574a">페이지를 불러오지 못했습니다. Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, 20000);
 </script>
 <style>
-:root{--blue:#3f6f66;--navy:#2c3e39;--line:#e6f2ee;--bg:#f7f8f6;--red:#c2574a;--brand:#3f6f66;--brand2:#4c7a73;--brand-d:#1f473e;--accent:#6fa394;--accent2:#5b8ea3;--soft:#eefaf5;--soft2:#d9efe6;--ink:#2a3733;--ink-s:#132720;--muted2:#6b8d83;--orange:#e08a2c;--ease:cubic-bezier(.4,0,.2,1)}
+:root{--blue:#0d1b26;--navy:#0d1b26;--line:#e9edf0;--bg:#f6f8f9;--red:#c94a3d;--brand:#0d1b26;--brand2:#12333d;--teal:#1b6b70;--teal-d:#12474f;--mint:#5fd3c1;--mint2:#86e6d4;--soft:#eef7f6;--ink:#0f1720;--ink2:#374151;--gray:#6b7280;--label:#8a939d;--orange:#e08a2c;--ease:cubic-bezier(.22,.61,.36,1)}
 *{box-sizing:border-box}
 body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;margin:0;background:var(--bg);color:#222}
 header{background:var(--navy);color:#fff;padding:14px 24px;font-size:18px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
@@ -156,87 +156,122 @@ button.x{background:#fff;color:var(--red);border:1px solid var(--red);padding:5p
 .sec.excl.over{background:#ffe3e3}
 label{cursor:pointer}
 
-/* ================= 올젠바이오 디자인 (색감·모양·움직임 통일) ================= */
-body{font-family:'Pretendard Variable',Pretendard,'Geist',-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
-header{background:#fff;color:#2c3e39;border-bottom:1px solid var(--line);padding:14px 28px;font-size:18px;font-weight:800;position:sticky;top:0;z-index:50;backdrop-filter:saturate(1.2)}
-header .hl::before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-right:10px}
-header small{color:var(--muted2);opacity:1;font-weight:600}
-header .help{background:var(--soft);color:var(--brand);border:1.5px solid var(--soft2);border-radius:999px;font-weight:700;transition:all .15s var(--ease)}
-header .help:hover{border-color:var(--brand2);background:#fff;color:var(--brand-d)}
-.card{border-radius:16px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(80,110,100,.06);padding:20px 24px}
-h2{color:var(--ink-s);font-weight:800;letter-spacing:-.02em}
-button{background:linear-gradient(135deg,var(--brand),var(--brand2));border-radius:10px;font-weight:700;box-shadow:0 4px 14px rgba(80,110,100,.18);transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease)}
-button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 18px rgba(80,110,100,.25)}
+/* ================= 루젠에스씨아이(lugensci-site) 디자인 — 네이비·틸 그라데이션, 민트 라벨, 알약형 버튼 ================= */
+body{font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+.eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--mint);margin-bottom:6px}
+/* 상단 바 */
+header{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:14px 28px;font-size:18px;font-weight:800;position:sticky;top:0;z-index:50;letter-spacing:-.02em}
+header .hl::before{content:'LUGEN SCI';font-size:10.5px;font-weight:800;letter-spacing:.22em;color:#fff;background:var(--navy);border-radius:999px;padding:4px 10px;margin-right:12px}
+header small{color:var(--label);font-weight:600}
+header .help{background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:999px;font-weight:700;box-shadow:none;transition:all .25s var(--ease)}
+header .help:hover{border-color:var(--navy);background:var(--navy);color:#fff}
+/* 카드 */
+.card{background:#fff;border-radius:20px;border:1px solid var(--line);box-shadow:0 10px 30px rgba(13,27,38,.06);padding:22px 26px}
+h2{color:var(--ink);font-weight:800;letter-spacing:-.02em}
+/* 진한 그라데이션 머리띠 (제품 카드 윗부분과 같은 느낌) */
+.band{margin:-22px -26px 18px;padding:22px 26px 20px;border-radius:20px 20px 0 0;color:#fff;
+  background:radial-gradient(120% 140% at 85% 0%,rgba(31,111,115,.85) 0%,rgba(31,111,115,0) 55%),linear-gradient(135deg,#0d1b26 0%,#10283a 60%,#12333d 100%)}
+.band h2{color:#fff;font-size:21px;margin:0}
+.uphead.band{display:flex;justify-content:space-between;align-items:flex-end}
+/* 버튼: 네이비 알약 + 화살표 */
+button{background:var(--navy);color:#fff;border:0;border-radius:999px;font-weight:800;padding:11px 22px;letter-spacing:-.01em;box-shadow:0 8px 20px rgba(13,27,38,.18);transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s var(--ease),border-color .25s var(--ease),color .25s var(--ease)}
+button:hover:not(:disabled){background:var(--brand2);transform:translateY(-2px);box-shadow:0 12px 26px rgba(13,27,38,.24)}
 button:active:not(:disabled){transform:translateY(0)}
-button.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--soft2);box-shadow:none}
-button.ghost:hover:not(:disabled){border-color:var(--brand2);background:var(--soft);color:var(--brand-d);box-shadow:none}
-button.x{background:#fff;color:var(--red);border:1.5px solid #ecc9c4;box-shadow:none;border-radius:8px}
-button.x:hover:not(:disabled){background:#fcf1ef;border-color:var(--red);box-shadow:none}
-.resetbtn{background:linear-gradient(135deg,#c2574a,#b0473b)!important;border:0!important;border-radius:10px;box-shadow:0 4px 14px rgba(194,87,74,.28)!important}
-.resetbtn:hover:not(:disabled){box-shadow:0 6px 18px rgba(194,87,74,.38)!important}
-.resetbtn:disabled{background:#eef1f0!important;color:#a6b3af!important;box-shadow:none!important}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(194,87,74,.5)}100%{box-shadow:0 0 0 14px rgba(194,87,74,0)}}
-.drop{border:1.5px dashed var(--soft2);border-radius:14px;background:#fbfdfc;transition:all .15s var(--ease)}
-.drop:hover{border-color:var(--accent)}
-.drop.over{border-color:var(--brand2);background:var(--soft)}
-.muted{color:var(--muted2)}
-.fname{color:var(--ink)} .fname.none{color:#a6b3af}
-.bar{background:#e8efec;border-radius:999px}
-.bar i{background:linear-gradient(90deg,var(--brand),var(--accent))}
-.bar b{color:var(--ink-s)}
-.pv{border:1px solid var(--line);border-radius:14px}
-.pvc{border-color:var(--line);border-radius:10px;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
-.pvc:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(80,110,100,.15)}
-.pvc .no{background:linear-gradient(135deg,var(--brand),var(--brand2))}
-.pvc .rm{color:var(--red);border-color:#ecc9c4;box-shadow:none}
-.sec{border:1.5px dashed var(--soft2);border-radius:14px;transition:background .15s var(--ease),border-color .15s var(--ease)}
-.sec.over{background:var(--soft);border-color:var(--brand2)}
-.sec h3{color:var(--ink-s)}
-.ph{border-color:var(--line);border-radius:10px;background:#fff;transition:transform .15s var(--ease),box-shadow .15s var(--ease),border-color .15s var(--ease)}
-.ph:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(80,110,100,.15);border-color:var(--accent)}
+#start::after,#build::after,#dl::after{content:'→';display:inline-block;margin-left:8px;transition:transform .25s var(--ease)}
+#start:hover::after,#build:hover::after,#dl:hover::after{transform:translateX(4px)}
+button.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+button.ghost:hover:not(:disabled){border-color:var(--navy);background:#fff;color:var(--navy);box-shadow:0 6px 16px rgba(13,27,38,.08)}
+button.sm{padding:7px 16px}
+button.x{background:#fff;color:var(--red);border:1.5px solid #f0d2cd;border-radius:999px;box-shadow:none}
+button.x:hover:not(:disabled){background:#fdf1ef;border-color:var(--red);box-shadow:none}
+.resetbtn{background:#fff!important;color:var(--red)!important;border:1.5px solid rgba(255,255,255,.0)!important;border-radius:999px!important;box-shadow:0 8px 20px rgba(201,74,61,.35)!important;background:linear-gradient(135deg,#d35647,#b93d31)!important;color:#fff!important}
+.resetbtn:hover:not(:disabled){transform:translateY(-2px)}
+.resetbtn:disabled{background:rgba(255,255,255,.12)!important;color:rgba(255,255,255,.45)!important;box-shadow:none!important}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,74,61,.5)}100%{box-shadow:0 0 0 14px rgba(201,74,61,0)}}
+/* 업로드 칸 */
+.drop{border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(13,27,38,.04);transition:all .25s var(--ease)}
+.drop b{font-size:15px;color:var(--ink)}
+.drop:hover{border-color:#cfd8dc}
+.drop.over{border-color:var(--teal);background:var(--soft)}
+.pick .lbl{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--label);width:84px}
+.muted{color:var(--label)}
+.fname{color:var(--ink);font-weight:600} .fname.none{color:#b3bac2;font-weight:500}
+.bar{background:#e9eef1;border-radius:999px;height:24px}
+.bar i{background:linear-gradient(90deg,#0d1b26,#1b6b70 60%,#5fd3c1)}
+.bar b{color:var(--ink);line-height:24px;mix-blend-mode:normal}
+.pv{border:1px solid var(--line);border-radius:16px}
+.pvc{border-color:var(--line);border-radius:12px;background:#fff;transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+.pvc:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(13,27,38,.12)}
+.pvc .no{background:var(--navy);color:var(--mint2);border-radius:999px;padding:1px 8px}
+.pvc .rm{color:var(--red);border:1.5px solid #f0d2cd;box-shadow:none;padding:0}
+.pvc .src{color:var(--label);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+/* 분류 화면: 항목 = 제품 카드처럼 */
+.sec{border:1px solid var(--line);border-radius:18px;background:#fff;padding:0 0 12px;overflow:hidden;box-shadow:0 8px 24px rgba(13,27,38,.05);transition:box-shadow .25s var(--ease),transform .25s var(--ease)}
+.sec h3{margin:0 0 12px;padding:14px 16px;color:#fff;font-size:15.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:radial-gradient(120% 160% at 90% 0%,rgba(31,111,115,.8) 0%,rgba(31,111,115,0) 55%),linear-gradient(135deg,#0d1b26,#10283a 60%,#12333d)}
+.sec h3 .eyebrow{width:100%;margin:0 0 2px}
+.sec h3 .cntpill{margin-left:auto;background:rgba(255,255,255,.1);color:var(--mint2);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
+.sec .grid{padding:0 12px}
+.sec.over{box-shadow:0 0 0 3px var(--mint),0 8px 24px rgba(13,27,38,.08)}
+.ph{border:1px solid var(--line);border-radius:12px;background:#fff;transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s var(--ease)}
+.ph:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(13,27,38,.12);border-color:#cfd8dc}
 .ph.check{border:2px solid var(--red)}
 .ph.sel{box-shadow:0 0 0 3px var(--orange)}
-.tag{background:var(--red)}
-.sec.excl{border:1.5px solid var(--red);background:repeating-linear-gradient(45deg,#fdf5f3,#fdf5f3 12px,#f9e9e6 12px,#f9e9e6 24px)}
-.sec.excl h3{color:var(--red)} .sec.excl .exnote{color:#9a4338}
+.tag{background:var(--red);border-radius:999px}
+.sec.excl{border:1.5px solid var(--red);background:repeating-linear-gradient(45deg,#fff,#fff 12px,#fdf3f1 12px,#fdf3f1 24px)}
+.sec.excl h3{background:linear-gradient(135deg,#3a1513,#7a2a22 60%,#a9392c)}
+.sec.excl h3 .eyebrow{color:#ffb4a8}
+.sec.excl .exnote{color:#ffd9d2;width:100%;font-size:12px;font-weight:500}
 .flash{outline-color:var(--orange)!important;background:#fdf3e6}
-.wordpane{background:#c3d3cd}
-.pane{border-radius:14px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(80,110,100,.06)}
+.wordpane{background:#dfe5e8}
+.pane{border-radius:18px;border:1px solid var(--line);box-shadow:0 10px 30px rgba(13,27,38,.06)}
 .secpane{background:var(--bg)}
-.pvstate{color:var(--brand)}
-.sum{background:var(--soft);border-left-color:var(--brand2);border-radius:10px} .sum b{color:var(--brand)}
-.vok{background:#eaf6f0;border-left-color:#4c7a73;color:var(--brand-d);border-radius:10px}
-.vbad{background:#fcf1ef;border-left-color:var(--red);color:#8f3328;border-radius:10px}
+.wordbar{font-weight:700;color:var(--ink2)}
+.pvstate{color:var(--teal);font-weight:700}
+#step2 > .card.sticky{border-radius:20px}
+#nAll,#nChk{color:var(--ink)}
+.sum{background:var(--soft);border-left:4px solid var(--teal);border-radius:12px} .sum b{color:var(--teal)}
+.vok{background:#e9f7f4;border-left:4px solid var(--teal);color:#0f4a46;border-radius:12px}
+.vbad{background:#fdf1ef;border-left:4px solid var(--red);color:#8f2f25;border-radius:12px}
 .cleannote{color:#b5701f}
 .err{color:var(--red)}
-.ph select,select{border:1px solid var(--soft2);border-radius:6px;background:#fff;color:var(--ink);font-family:inherit}
+select{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-family:inherit}
+label{font-weight:600;color:var(--ink2)}
+input[type=checkbox]{accent-color:var(--teal)}
 /* 사용법 */
-.gintro{background:var(--soft);border:1px solid var(--soft2);border-radius:12px}
-.gnum{background:linear-gradient(135deg,var(--brand),var(--accent))}
-.gstep b{color:var(--brand-d)}
+#guide{border-radius:20px}
+#guide .band{margin:-16px -18px 16px;padding:18px 20px}
+#guide .band h2{font-size:19px}
+#done .band{margin-bottom:16px}
+.gintro{background:var(--soft);border:1px solid #d6ece9;border-radius:14px}
+.gnum{background:var(--navy);color:var(--mint2);font-weight:800}
+.gstep h3{color:var(--ink)}
+.gstep b{color:var(--ink)}
 .gstep{border-top-color:var(--line)}
-.btnlike{border-color:var(--brand2);color:var(--brand);border-radius:6px}
-.btnlike.fill{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
-.gfig{border-color:var(--line);border-radius:12px;transition:transform .15s var(--ease),box-shadow .15s var(--ease),border-color .15s var(--ease)}
-.gfig:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(80,110,100,.22);transform:translateY(-2px)}
-.gfig::after{background:rgba(44,62,57,.85)}
-.gtip{background:#fdf6ec;border-left-color:var(--orange);border-radius:8px}
-.gfaq details{border-color:var(--line);border-radius:10px;transition:background .15s var(--ease)}
-.gfaq details[open]{background:#fbfdfc}
-.gfaq summary{color:var(--brand-d)}
-.kbd{border-color:var(--soft2)}
-#lb{background:rgba(19,39,32,.88)}
-#lb .nav:hover,#lbClose:hover{background:var(--brand2)}
-#cf .box{border-top-color:var(--red);border-radius:16px}
-#cfYes{background:linear-gradient(135deg,#c2574a,#b0473b);box-shadow:0 4px 14px rgba(194,87,74,.28)}
-#cfNo{background:#f0f4f2;color:var(--ink);box-shadow:none;border:1.5px solid var(--soft2)}
-#cfNo:hover:not(:disabled){background:var(--soft);border-color:var(--brand2)}
+.btnlike{border:1.5px solid var(--line);color:var(--ink);border-radius:999px;padding:0 8px;font-weight:700}
+.btnlike.fill{background:var(--navy);color:#fff;border-color:var(--navy)}
+.gfig{border-color:var(--line);border-radius:14px;transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s var(--ease)}
+.gfig:hover{border-color:#cfd8dc;box-shadow:0 14px 30px rgba(13,27,38,.16);transform:translateY(-3px)}
+.gfig::after{background:var(--navy);color:var(--mint2);font-weight:700;border-radius:999px}
+.gtip{background:#fdf6ec;border-left-color:var(--orange);border-radius:10px}
+.gfaq details{border-color:var(--line);border-radius:12px;transition:background .25s var(--ease)}
+.gfaq details[open]{background:#fafcfc}
+.gfaq summary{color:var(--ink)}
+.kbd{border-color:#d7dde2}
+#lb{background:rgba(13,27,38,.92)}
+#lb .nav:hover,#lbClose:hover{background:var(--teal)}
+#gm .gbox{border-radius:20px 0 0 20px}
+#cf .box{border-top:0;border-radius:20px;padding-top:0;overflow:hidden}
+#cf .box .ico{margin:0 -26px 14px;padding:18px 0 14px;background:linear-gradient(135deg,#3a1513,#7a2a22 60%,#a9392c);font-size:34px}
+#cfYes{background:linear-gradient(135deg,#d35647,#b93d31);box-shadow:0 8px 20px rgba(201,74,61,.3)}
+#cfNo{background:#fff;color:var(--ink);box-shadow:none;border:1.5px solid var(--line)}
+#cfNo:hover:not(:disabled){border-color:var(--navy);background:#fff}
 button.back{border-color:#f0d3ad;color:#a8641a}
 button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);color:#8a4f12}
-/* 움직임: 화면이 바뀔 때 살짝 떠오르며 나타남 */
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-#step1:not(.hidden),#step2:not(.hidden),#done:not(.hidden),#guide{animation:fadeUp .45s var(--ease) both}
-#cf.on .box{animation:fadeUp .25s var(--ease) both}
+/* 움직임 */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#step1:not(.hidden),#step2:not(.hidden),#done:not(.hidden),#guide{animation:fadeUp .55s var(--ease) both}
+#cf.on .box{animation:fadeUp .3s var(--ease) both}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -245,13 +280,13 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 <main>
 <div class="startwrap">
 <aside id="guide" class="card"><div id="guideBody">
-  <h2>📘 사용법 <span class="muted" style="font-weight:normal">처음이어도 5분이면 끝나요</span></h2>
+  <div class="band"><span class="eyebrow">How to use · Guide</span><h2>사용법 <span style="font-weight:500;font-size:13px;opacity:.75">처음이어도 5분이면 끝나요</span></h2></div>
   <div class="gintro"><b>준비물 2가지</b><br>① <b>사진 넣기 전 워드 파일</b>(.docx)<br>② <b>현장 사진</b>(jpg·png, 폴더째 가능)<br>그림은 <b>누르면 크게</b> 볼 수 있어요. 키보드 <span class="kbd">←</span> <span class="kbd">→</span>로 넘기고 <span class="kbd">Esc</span>로 닫아요.</div>
 
   <div class="gstep"><h3><span class="gnum">1</span>워드 파일 넣기</h3>
     <p><span class="btnlike">파일 선택</span>을 눌러 <b>사진 넣기 전 워드</b>를 고르세요. 파일을 칸 안으로 끌어다 놓아도 됩니다.</p>
     <p>잘못 골랐으면 <span class="btnlike" style="color:#c2574a;border-color:#c2574a">취소</span>를 누르고 다시 고르면 돼요.</p>
-    <figure class="gfig" data-cap="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]."><img src="./guide/g1.jpg?v=20261108g" alt="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]." loading="lazy"></figure>
+    <figure class="gfig" data-cap="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]."><img src="./guide/g1.jpg?v=20261108h" alt="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]." loading="lazy"></figure>
     <div class="gtip">💡 예전에 이 사이트로 사진을 넣었던 워드를 다시 넣어도 괜찮아요. 들어 있던 사진·계통도는 <b>자동으로 지우고 새로</b> 넣습니다.</div>
   </div>
 
@@ -259,7 +294,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
     <ul><li>몇 장만 넣을 때: <b>사진 파일</b> 줄의 <span class="btnlike">파일 선택</span> → <span class="kbd">Ctrl</span>을 누른 채 여러 장 클릭(전부는 <span class="kbd">Ctrl</span>+<span class="kbd">A</span>)</li>
     <li>폴더째 넣을 때: <b>사진 폴더</b> 줄의 <span class="btnlike">폴더 선택</span> → 폴더 고르기 → 브라우저가 "업로드할까요?" 물으면 <b>업로드</b> (사진은 내 PC 밖으로 나가지 않아요)</li>
     <li>줄마다 <b>취소</b>가 따로 있어서 잘못 넣은 쪽만 지울 수 있어요.</li></ul>
-    <figure class="gfig" data-cap="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]."><img src="./guide/g2.jpg?v=20261108g" alt="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]." loading="lazy"></figure>
+    <figure class="gfig" data-cap="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]."><img src="./guide/g2.jpg?v=20261108h" alt="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">3</span>넣은 사진 확인하기</h3>
@@ -269,7 +304,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 
   <div class="gstep"><h3><span class="gnum">4</span>자동 분류 시작</h3>
     <p><span class="btnlike fill">자동 분류 시작</span>을 누르면 막대에 진행률(%)·속도·남은 시간이 나와요.</p>
-    <figure class="gfig" data-cap="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다."><img src="./guide/g3.jpg?v=20261108g" alt="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다."><img src="./guide/g3.jpg?v=20261108h" alt="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다." loading="lazy"></figure>
     <div class="gtip">⏱ 처음 한 번만 분류 엔진을 받느라 1~2분 걸리고, 다음부터는 바로 시작돼요.</div>
   </div>
 
@@ -277,39 +312,39 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
     <ul><li><b>왼쪽</b> = 완성될 워드 미리보기 (마우스로 끌거나 휠로 위아래 이동)</li>
     <li><b>오른쪽</b> = 1-1 케이블 ~ 1-10 통신 접지까지 항목별로 나뉜 사진</li>
     <li><b style="color:#c2574a">빨간 테두리</b> 사진은 자동 분류가 헷갈린 사진이에요. <b>꼭 눈으로 확인</b>하세요.</li></ul>
-    <figure class="gfig" data-cap="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다."><img src="./guide/g4.jpg?v=20261108g" alt="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다."><img src="./guide/g4.jpg?v=20261108h" alt="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">6</span>잘못 들어간 사진 옮기기</h3>
     <ul><li><b>방법 1</b>: 사진 아래 <b>선택 상자</b>에서 맞는 항목 고르기</li>
     <li><b>방법 2</b>: 사진을 <b>끌어서</b> 맞는 항목 칸에 놓기</li></ul>
-    <p>옮기면 왼쪽 워드가 <b>바로 바뀌고</b>, 위에 <b style="color:#3f6f66">✓ 미리보기 최신</b>이 나오면 반영 끝이에요.</p>
-    <figure class="gfig" data-cap="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다."><img src="./guide/g5.jpg?v=20261108g" alt="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다." loading="lazy"></figure>
+    <p>옮기면 왼쪽 워드가 <b>바로 바뀌고</b>, 위에 <b style="color:#1b6b70">✓ 미리보기 최신</b>이 나오면 반영 끝이에요.</p>
+    <figure class="gfig" data-cap="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다."><img src="./guide/g5.jpg?v=20261108h" alt="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다." loading="lazy"></figure>
     <div class="gtip">↩ 빨간 사진을 옮겼다가 원래 칸으로 되돌리면 빨간 표시도 다시 생겨서, 확인할 사진을 놓치지 않아요.</div>
   </div>
 
   <div class="gstep"><h3><span class="gnum">7</span>사진이 워드 어디에 들어갔는지 보기</h3>
     <p>오른쪽 사진을 <b>한 번 누르면</b> 왼쪽 워드가 그 사진 칸으로 이동하고 <b style="color:#e08a2c">주황색</b>으로 표시돼요. 반대로 왼쪽 워드의 사진을 누르면 오른쪽에서 그 사진을 찾아 줍니다.</p>
-    <figure class="gfig" data-cap="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다."><img src="./guide/g6.jpg?v=20261108g" alt="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다."><img src="./guide/g6.jpg?v=20261108h" alt="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">8</span>워드에 넣지 않을 사진</h3>
     <p>맨 아래 <b style="color:#c2574a">🚫 제외</b> 칸으로 옮기면 그 사진은 워드에 들어가지 않아요. 잘못 옮겼으면 다시 원래 칸으로 옮기면 됩니다.</p>
-    <figure class="gfig" data-cap="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다."><img src="./guide/g7.jpg?v=20261108g" alt="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다."><img src="./guide/g7.jpg?v=20261108h" alt="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">9</span>워드 만들기</h3>
     <ul><li><b>지난 회차 계통도 넣기</b>: 켜 두면 항목마다 계통도가 들어가요.</li>
     <li><b>사진을 칸에 꽉 채우기</b>: 켜면 테두리에 빈틈없이 맞춰요(가장자리가 조금 잘림). 끄면 사진 전체가 보이게 넣어요.</li>
     <li>다 됐으면 <span class="btnlike fill">③ 워드 만들기</span>를 누르세요.</li></ul>
-    <figure class="gfig" data-cap="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다."><img src="./guide/g8.jpg?v=20261108g" alt="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다."><img src="./guide/g8.jpg?v=20261108h" alt="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">10</span>완성 확인</h3>
     <p>완성 파일을 다시 열어 <b>항목마다 계통도 1개, 사진 수·순서가 화면과 같은지</b> 자동으로 검사해요.</p>
-    <ul><li><b style="color:#3f6f66">초록색 "검사 통과"</b>가 보이면 끝. 파일은 <b>다운로드 폴더</b>에 저장돼요.</li>
+    <ul><li><b style="color:#1b6b70">초록색 "검사 통과"</b>가 보이면 끝. 파일은 <b>다운로드 폴더</b>에 저장돼요.</li>
     <li>빨간색 문제가 보이면 파일을 내려받지 않아요. 그 화면을 캡처해서 담당자에게 알려 주세요.</li></ul>
-    <figure class="gfig" data-cap="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요."><img src="./guide/g9.jpg?v=20261108g" alt="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요." loading="lazy"></figure>
+    <figure class="gfig" data-cap="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요."><img src="./guide/g9.jpg?v=20261108h" alt="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요." loading="lazy"></figure>
   </div>
 
   <div class="gstep gfaq"><h3><span class="gnum">?</span>자주 묻는 질문</h3>
@@ -323,7 +358,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 </div></aside>
 
 <section id="step1" class="card">
-  <div class="uphead"><h2>① 파일 올리기</h2><button id="resetAll" class="resetbtn" title="선택한 워드와 현장 사진을 모두 지우고 처음부터 다시 합니다">🔄 전체 초기화</button></div>
+  <div class="uphead band"><div><span class="eyebrow">Step 01 · Upload</span><h2>파일 올리기</h2></div><button id="resetAll" class="resetbtn" title="선택한 워드와 현장 사진을 모두 지우고 처음부터 다시 합니다">🔄 전체 초기화</button></div>
   <div class="drop" id="dropDocx"><b>사진 넣기 전 워드(.docx)</b>
     <div class="pick"><button class="ghost sm" id="docxBtn">파일 선택</button><span class="fname none" id="docxName">선택된 파일 없음</span><button class="x" id="docxClear" hidden>취소</button></div>
     <input type="file" id="docx" accept=".docx" hidden>
@@ -366,7 +401,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 </section>
 
 <section id="done" class="card hidden">
-  <h2>④ 완성</h2>
+  <div class="band"><span class="eyebrow">Step 03 · Complete</span><h2>완성</h2></div>
   <div id="doneMsg"></div>
   <div class="row" style="margin-top:12px"><button id="dl">워드 다시 내려받기</button><button class="ghost" id="restart2">🔄 새 작업 (처음부터)</button><button class="ghost back" id="goBack">↩ 뒤로가기 (수정 가능)</button></div>
 </section>
@@ -402,7 +437,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
   window.closeGm = closeGm;
   document.getElementById('helpBtn').onclick = () => {
     const step1 = document.getElementById('step1');
-    if (!step1.classList.contains('hidden') && window.innerWidth > 1150) { home().scrollTo({ top: 0, behavior: 'smooth' }); home().animate([{ boxShadow: '0 0 0 4px #6fa394' }, { boxShadow: '0 0 0 0 #6fa394' }], 1200); }
+    if (!step1.classList.contains('hidden') && window.innerWidth > 1150) { home().scrollTo({ top: 0, behavior: 'smooth' }); home().animate([{ boxShadow: '0 0 0 4px #5fd3c1' }, { boxShadow: '0 0 0 0 #5fd3c1' }], 1200); }
     else openGm();
   };
   document.getElementById('gmClose').onclick = closeGm;
@@ -410,7 +445,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 })();
 </script>
 <script type="module">
-import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108g';
+import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108h';
 
 const $ = id => document.getElementById(id);
 let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlob = null, lastName = '';
@@ -418,7 +453,7 @@ let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlo
 // ---------------------------------------------------------- 라이브러리
 (async () => {
   try {
-    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108g').then(r => r.json()), fetch('./lib_refs.json?v=20261108g').then(r => r.json())]);
+    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108h').then(r => r.json()), fetch('./lib_refs.json?v=20261108h').then(r => r.json())]);
     LIB = base;
     REFS = refs.refs.map(r => ({ k: r.k, emb: b64ToF32(r.emb) }));
     $('libinfo').textContent = `분류 기준: ${LIB.version} 회차 완성본 사진 ${REFS.length}장 · 분류 항목 1-1 ~ 1-${Object.keys(LIB.sections).length} (케이블·배관·단자함 … 통신 접지, ${Object.keys(LIB.sections).length}개)`;
@@ -589,7 +624,7 @@ function renderReview() {
   const secs = [...Object.entries(LIB.sections).map(([k, v]) => [k, `1-${k}. ${v.title}`]), ['0', '🚫 제외 — 워드에 넣지 않을 사진']];
   for (const [k, title] of secs) {
     const s = document.createElement('div'); s.className = 'sec' + (k === '0' ? ' excl' : ''); s.dataset.k = k;
-    s.innerHTML = `<h3>${title} <span class="muted">(<span class="cnt">0</span>장)</span>${k === '0' ? '<span class="exnote">여기로 옮긴 사진은 완성 워드에 들어가지 않습니다. 잘못 옮겼다면 다시 원래 칸으로 끌어다 놓으세요.</span>' : ''}</h3><div class="grid"></div>`;
+    s.innerHTML = `<h3><span class="eyebrow">${k === '0' ? 'Excluded · 워드에 넣지 않음' : 'Section 1-' + k}</span><span>${k === '0' ? '🚫 제외' : title.replace(/^1-\d+\.\s*/, '')}</span><span class="cntpill"><span class="cnt">0</span>장</span>${k === '0' ? '<span class="exnote">여기로 옮긴 사진은 완성 워드에 들어가지 않습니다. 잘못 옮겼다면 다시 원래 칸으로 끌어다 놓으세요.</span>' : ''}</h3><div class="grid"></div>`;
     s.ondragover = e => { e.preventDefault(); s.classList.add('over'); };
     s.ondragleave = () => s.classList.remove('over');
     s.ondrop = e => { e.preventDefault(); s.classList.remove('over'); const d = cardById(e.dataTransfer.getData('text/plain')); if (d) move(d, +k); };
