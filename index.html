@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="./jszip.min.js?v=20261108h"></script>
-<script src="./docx-preview.min.js?v=20261108h"></script>
+<script src="./jszip.min.js?v=20261108i"></script>
+<script src="./docx-preview.min.js?v=20261108i"></script>
 <script>
 // 프로그램이 멈추면 화면에 이유를 보여줌 (버튼이 안 눌리는 상태로 조용히 멈추지 않게)
 window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span style="color:#c2574a">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침하거나 몇 분 뒤 다시 열어 주세요.</span>'; }, true);
@@ -161,7 +161,6 @@ body{font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',
 .eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--mint);margin-bottom:6px}
 /* 상단 바 */
 header{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:14px 28px;font-size:18px;font-weight:800;position:sticky;top:0;z-index:50;letter-spacing:-.02em}
-header .hl::before{content:'LUGEN SCI';font-size:10.5px;font-weight:800;letter-spacing:.22em;color:#fff;background:var(--navy);border-radius:999px;padding:4px 10px;margin-right:12px}
 header small{color:var(--label);font-weight:600}
 header .help{background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:999px;font-weight:700;box-shadow:none;transition:all .25s var(--ease)}
 header .help:hover{border-color:var(--navy);background:var(--navy);color:#fff}
@@ -286,7 +285,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
   <div class="gstep"><h3><span class="gnum">1</span>워드 파일 넣기</h3>
     <p><span class="btnlike">파일 선택</span>을 눌러 <b>사진 넣기 전 워드</b>를 고르세요. 파일을 칸 안으로 끌어다 놓아도 됩니다.</p>
     <p>잘못 골랐으면 <span class="btnlike" style="color:#c2574a;border-color:#c2574a">취소</span>를 누르고 다시 고르면 돼요.</p>
-    <figure class="gfig" data-cap="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]."><img src="./guide/g1.jpg?v=20261108h" alt="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]." loading="lazy"></figure>
+    <figure class="gfig" data-cap="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]."><img src="./guide/g1.jpg?v=20261108i" alt="1. [파일 선택]으로 사진 넣기 전 워드를 고릅니다. 잘못 골랐으면 [취소]." loading="lazy"></figure>
     <div class="gtip">💡 예전에 이 사이트로 사진을 넣었던 워드를 다시 넣어도 괜찮아요. 들어 있던 사진·계통도는 <b>자동으로 지우고 새로</b> 넣습니다.</div>
   </div>
 
@@ -294,7 +293,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
     <ul><li>몇 장만 넣을 때: <b>사진 파일</b> 줄의 <span class="btnlike">파일 선택</span> → <span class="kbd">Ctrl</span>을 누른 채 여러 장 클릭(전부는 <span class="kbd">Ctrl</span>+<span class="kbd">A</span>)</li>
     <li>폴더째 넣을 때: <b>사진 폴더</b> 줄의 <span class="btnlike">폴더 선택</span> → 폴더 고르기 → 브라우저가 "업로드할까요?" 물으면 <b>업로드</b> (사진은 내 PC 밖으로 나가지 않아요)</li>
     <li>줄마다 <b>취소</b>가 따로 있어서 잘못 넣은 쪽만 지울 수 있어요.</li></ul>
-    <figure class="gfig" data-cap="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]."><img src="./guide/g2.jpg?v=20261108h" alt="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]." loading="lazy"></figure>
+    <figure class="gfig" data-cap="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]."><img src="./guide/g2.jpg?v=20261108i" alt="2~4. 사진 파일 또는 폴더를 넣으면 아래에 번호가 붙은 사진이 보입니다. × 를 누르면 그 사진만 빠지고, 확인이 끝나면 [자동 분류 시작]." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">3</span>넣은 사진 확인하기</h3>
@@ -304,7 +303,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 
   <div class="gstep"><h3><span class="gnum">4</span>자동 분류 시작</h3>
     <p><span class="btnlike fill">자동 분류 시작</span>을 누르면 막대에 진행률(%)·속도·남은 시간이 나와요.</p>
-    <figure class="gfig" data-cap="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다."><img src="./guide/g3.jpg?v=20261108h" alt="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다."><img src="./guide/g3.jpg?v=20261108i" alt="4. 자동 분류 진행률. 처음 한 번은 분류 엔진(약 36MB)을 받느라 1~2분 더 걸립니다." loading="lazy"></figure>
     <div class="gtip">⏱ 처음 한 번만 분류 엔진을 받느라 1~2분 걸리고, 다음부터는 바로 시작돼요.</div>
   </div>
 
@@ -312,39 +311,39 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
     <ul><li><b>왼쪽</b> = 완성될 워드 미리보기 (마우스로 끌거나 휠로 위아래 이동)</li>
     <li><b>오른쪽</b> = 1-1 케이블 ~ 1-10 통신 접지까지 항목별로 나뉜 사진</li>
     <li><b style="color:#c2574a">빨간 테두리</b> 사진은 자동 분류가 헷갈린 사진이에요. <b>꼭 눈으로 확인</b>하세요.</li></ul>
-    <figure class="gfig" data-cap="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다."><img src="./guide/g4.jpg?v=20261108h" alt="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다."><img src="./guide/g4.jpg?v=20261108i" alt="5. 왼쪽은 워드 미리보기, 오른쪽은 항목별 사진. 빨간 테두리는 꼭 확인할 사진입니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">6</span>잘못 들어간 사진 옮기기</h3>
     <ul><li><b>방법 1</b>: 사진 아래 <b>선택 상자</b>에서 맞는 항목 고르기</li>
     <li><b>방법 2</b>: 사진을 <b>끌어서</b> 맞는 항목 칸에 놓기</li></ul>
     <p>옮기면 왼쪽 워드가 <b>바로 바뀌고</b>, 위에 <b style="color:#1b6b70">✓ 미리보기 최신</b>이 나오면 반영 끝이에요.</p>
-    <figure class="gfig" data-cap="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다."><img src="./guide/g5.jpg?v=20261108h" alt="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다."><img src="./guide/g5.jpg?v=20261108i" alt="6. 선택 상자에서 항목을 고르거나, 사진을 다른 항목 칸으로 끌어다 놓아 옮깁니다." loading="lazy"></figure>
     <div class="gtip">↩ 빨간 사진을 옮겼다가 원래 칸으로 되돌리면 빨간 표시도 다시 생겨서, 확인할 사진을 놓치지 않아요.</div>
   </div>
 
   <div class="gstep"><h3><span class="gnum">7</span>사진이 워드 어디에 들어갔는지 보기</h3>
     <p>오른쪽 사진을 <b>한 번 누르면</b> 왼쪽 워드가 그 사진 칸으로 이동하고 <b style="color:#e08a2c">주황색</b>으로 표시돼요. 반대로 왼쪽 워드의 사진을 누르면 오른쪽에서 그 사진을 찾아 줍니다.</p>
-    <figure class="gfig" data-cap="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다."><img src="./guide/g6.jpg?v=20261108h" alt="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다."><img src="./guide/g6.jpg?v=20261108i" alt="7. 오른쪽 사진을 누르면 왼쪽 워드에서 그 사진이 들어간 칸으로 이동해 주황색으로 표시합니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">8</span>워드에 넣지 않을 사진</h3>
     <p>맨 아래 <b style="color:#c2574a">🚫 제외</b> 칸으로 옮기면 그 사진은 워드에 들어가지 않아요. 잘못 옮겼으면 다시 원래 칸으로 옮기면 됩니다.</p>
-    <figure class="gfig" data-cap="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다."><img src="./guide/g7.jpg?v=20261108h" alt="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다."><img src="./guide/g7.jpg?v=20261108i" alt="8. 제외 칸에 넣은 사진은 흑백으로 보이고 워드에 들어가지 않습니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">9</span>워드 만들기</h3>
     <ul><li><b>지난 회차 계통도 넣기</b>: 켜 두면 항목마다 계통도가 들어가요.</li>
     <li><b>사진을 칸에 꽉 채우기</b>: 켜면 테두리에 빈틈없이 맞춰요(가장자리가 조금 잘림). 끄면 사진 전체가 보이게 넣어요.</li>
     <li>다 됐으면 <span class="btnlike fill">③ 워드 만들기</span>를 누르세요.</li></ul>
-    <figure class="gfig" data-cap="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다."><img src="./guide/g8.jpg?v=20261108h" alt="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다." loading="lazy"></figure>
+    <figure class="gfig" data-cap="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다."><img src="./guide/g8.jpg?v=20261108i" alt="9. 옵션을 확인하고 [③ 워드 만들기]를 누릅니다." loading="lazy"></figure>
   </div>
 
   <div class="gstep"><h3><span class="gnum">10</span>완성 확인</h3>
     <p>완성 파일을 다시 열어 <b>항목마다 계통도 1개, 사진 수·순서가 화면과 같은지</b> 자동으로 검사해요.</p>
     <ul><li><b style="color:#1b6b70">초록색 "검사 통과"</b>가 보이면 끝. 파일은 <b>다운로드 폴더</b>에 저장돼요.</li>
     <li>빨간색 문제가 보이면 파일을 내려받지 않아요. 그 화면을 캡처해서 담당자에게 알려 주세요.</li></ul>
-    <figure class="gfig" data-cap="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요."><img src="./guide/g9.jpg?v=20261108h" alt="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요." loading="lazy"></figure>
+    <figure class="gfig" data-cap="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요."><img src="./guide/g9.jpg?v=20261108i" alt="10. 초록색 검사 통과가 보이면 완료. 다운로드 폴더를 확인하세요." loading="lazy"></figure>
   </div>
 
   <div class="gstep gfaq"><h3><span class="gnum">?</span>자주 묻는 질문</h3>
@@ -445,7 +444,7 @@ button.back:hover:not(:disabled){background:#fdf6ec;border-color:var(--orange);c
 })();
 </script>
 <script type="module">
-import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108h';
+import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor, verifyDocx } from './engine.js?v=20261108i';
 
 const $ = id => document.getElementById(id);
 let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlob = null, lastName = '';
@@ -453,7 +452,7 @@ let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlo
 // ---------------------------------------------------------- 라이브러리
 (async () => {
   try {
-    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108h').then(r => r.json()), fetch('./lib_refs.json?v=20261108h').then(r => r.json())]);
+    const [base, refs] = await Promise.all([fetch('./lib_base.json?v=20261108i').then(r => r.json()), fetch('./lib_refs.json?v=20261108i').then(r => r.json())]);
     LIB = base;
     REFS = refs.refs.map(r => ({ k: r.k, emb: b64ToF32(r.emb) }));
     $('libinfo').textContent = `분류 기준: ${LIB.version} 회차 완성본 사진 ${REFS.length}장 · 분류 항목 1-1 ~ 1-${Object.keys(LIB.sections).length} (케이블·배관·단자함 … 통신 접지, ${Object.keys(LIB.sections).length}개)`;
