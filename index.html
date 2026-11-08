@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>감독일지 사진 자동 첨부</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
+<script src="./jszip.min.js"></script>
+<script src="./docx-preview.min.js"></script>
 <style>
 :root{--blue:#1f6feb;--navy:#1f3a5f;--line:#d8dde6;--bg:#f4f5f7;--red:#d93f3f}
 *{box-sizing:border-box}
@@ -12,6 +13,19 @@ body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;margin:0;backg
 header{background:var(--navy);color:#fff;padding:14px 24px;font-size:18px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
 header small{font-weight:normal;font-size:12px;opacity:.8}
 main{max-width:1200px;margin:20px auto;padding:0 16px}
+main.wide{max-width:none;margin:12px 0;padding:0 14px}
+.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+.pane{height:calc(100vh - 150px);overflow:auto;border-radius:8px;background:#fff;box-shadow:0 1px 3px #0002}
+.wordpane{background:#8b929c;cursor:grab;position:relative;overscroll-behavior:contain}
+.wordpane.dragging{cursor:grabbing;user-select:none}
+.wordpane .docx-wrapper{background:transparent!important;padding:14px 0!important}
+.wordpane .docx-wrapper>section.docx{box-shadow:0 2px 8px #0005;margin-bottom:14px!important}
+.wordpane img{pointer-events:none}
+.wordbar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#444;margin:0 0 6px}
+.wordbar button{padding:3px 10px;font-size:12px}
+.pvstate{font-size:12px;color:#1f6feb}
+.flash{outline:4px solid #ffb02e;outline-offset:2px;transition:outline-color 1.2s}
+.secpane{padding:10px;background:#f4f5f7;box-shadow:none}
 .card{background:#fff;border-radius:8px;padding:18px 22px;margin-bottom:16px;box-shadow:0 1px 3px #0002}
 h2{font-size:16px;margin:0 0 12px}
 button{background:var(--blue);color:#fff;border:0;border-radius:6px;padding:9px 18px;font-size:14px;cursor:pointer;font-family:inherit}
@@ -41,6 +55,8 @@ button.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue)}
 .sticky{position:sticky;top:0;z-index:5}
 #done ul{margin:6px 0 0;padding-left:18px;font-size:13px}
 .hidden{display:none}
+.sum{font-size:16px;margin:0 0 10px;padding:10px 14px;background:#eef4ff;border-left:4px solid var(--blue);border-radius:6px}
+.sum b{color:var(--blue);font-size:18px}
 .pick{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap}
 .pick .lbl{width:64px;font-size:13px;color:#555}
 button.sm{padding:6px 14px;font-size:13px}
@@ -67,7 +83,7 @@ label{cursor:pointer}
 </style>
 </head>
 <body>
-<header>현장 감독 일지 · 사진 자동 첨부 <small>사진은 이 PC 밖으로 전송되지 않습니다</small></header>
+<header>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화 <small>사진은 이 PC 밖으로 전송되지 않습니다</small></header>
 <main>
 
 <section id="step1" class="card">
@@ -93,11 +109,22 @@ label{cursor:pointer}
   <div class="card sticky row">
     <div>사진 <b id="nAll">0</b>장 · <span class="tag">확인</span> <b id="nChk">0</b>장 — 틀린 사진은 끌어서 옮기거나 선택 상자로 바꾸세요</div>
     <label><input type="checkbox" id="optDiag" checked> 지난 회차 계통도 넣기</label>
+    <label title="켜면 사진 가장자리를 조금 잘라 칸을 빈틈없이 채웁니다. 끄면 사진 전체가 보이게 넣습니다."><input type="checkbox" id="optFill" checked> 사진을 칸에 꽉 채우기</label>
     <button id="build">③ 워드 만들기</button>
     <button class="ghost" id="restart">처음으로</button>
     <span class="pinfo" id="binfo"></span>
   </div>
-  <div id="secs"></div>
+  <div class="split">
+    <div>
+      <div class="wordbar"><span>📄 워드 미리보기 <span class="muted">(마우스로 끌거나 휠로 위아래 이동 · 사진을 옮기면 바로 반영)</span></span>
+        <span><span class="pvstate" id="pvState"></span> <button class="ghost" id="zOut">－</button> <span id="zVal">맞춤</span> <button class="ghost" id="zIn">＋</button> <button class="ghost" id="zFit">맞춤</button></span></div>
+      <div class="pane wordpane" id="wordPane"><div id="wordView" style="padding:40px;color:#fff">워드 미리보기 준비 중…</div></div>
+    </div>
+    <div>
+      <div class="wordbar"><span>🖼 넣은 사진 (끌어서 다른 항목으로 옮기기)</span></div>
+      <div class="pane secpane" id="secs"></div>
+    </div>
+  </div>
 </section>
 
 <section id="done" class="card hidden">
@@ -108,7 +135,7 @@ label{cursor:pointer}
 
 </main>
 <script type="module">
-import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32 } from './engine.js';
+import { loadModel, decode, embed, classify, prepJpeg, assemble, b64ToF32, boxFor } from './engine.js';
 
 const $ = id => document.getElementById(id);
 let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlob = null, lastName = '';
@@ -119,7 +146,7 @@ let LIB = null, REFS = [], items = [], docxFile = null, photoFiles = [], lastBlo
     const [base, refs] = await Promise.all([fetch('./lib_base.json').then(r => r.json()), fetch('./lib_refs.json').then(r => r.json())]);
     LIB = base;
     REFS = refs.refs.map(r => ({ k: r.k, emb: b64ToF32(r.emb) }));
-    $('libinfo').textContent = `분류 기준: ${LIB.version} 회차 완성본 사진 ${REFS.length}장 · 섹션 ${Object.keys(LIB.sections).length}개`;
+    $('libinfo').textContent = `분류 기준: ${LIB.version} 회차 완성본 사진 ${REFS.length}장 · 분류 항목 1-1 ~ 1-${Object.keys(LIB.sections).length} (케이블·배관·단자함 … 통신 접지, ${Object.keys(LIB.sections).length}개)`;
   } catch (e) { $('libinfo').innerHTML = '<span class="err">기준 데이터를 불러오지 못했습니다: ' + e.message + '</span>'; }
 })();
 
@@ -257,7 +284,7 @@ function move(d, k) {
   // 섹션 안에서는 파일명 순서 유지
   const grid = document.querySelector(`.sec[data-k="${k}"] .grid`);
   const after = Array.from(grid.children).find(c => c.dataset.name.localeCompare(d.dataset.name, 'ko', { numeric: true }) > 0);
-  grid.insertBefore(d, after || null); counts();
+  grid.insertBefore(d, after || null); counts(); schedulePreview(k);
 }
 function counts() {
   document.querySelectorAll('.sec').forEach(s => s.querySelector('.cnt').textContent = s.querySelectorAll('.ph').length);
@@ -276,8 +303,75 @@ function renderReview() {
     box.appendChild(s);
     for (const it of items.filter(i => String(i.section) === k)) s.querySelector('.grid').appendChild(card(it));
   }
-  counts(); window.scrollTo(0, 0);
+  counts(); document.querySelector('main').classList.add('wide'); window.scrollTo(0, 0); schedulePreview(null);
 }
+
+// ---------------------------------------------------------- 실시간 워드 미리보기
+const smallCache = new Map();
+async function smallImg(it) {
+  const box = boxFor((LIB.sections[String(it.section)] || {}).layout);
+  const aspect = $('optFill').checked ? box.w / box.h : null;
+  const key = it.name + '|' + (aspect ? aspect.toFixed(4) : 'fit');
+  if (!smallCache.has(key)) { const b = await decode(it.file); smallCache.set(key, await prepJpeg(b, 520, aspect)); b.close && b.close(); }
+  return smallCache.get(key);
+}
+let pvTimer = null, pvBusy = false, pvAgain = false, pvFocus = null, zoom = null;
+function schedulePreview(k) { pvFocus = k; clearTimeout(pvTimer); pvTimer = setTimeout(renderPreview, 350); }
+function fitZoom() {
+  const w = document.querySelector('#wordView section.docx'); if (!w) return;
+  const z = zoom || Math.min(1, ($("wordPane").clientWidth - 30) / w.offsetWidth);
+  $('wordView').style.zoom = z; $('zVal').textContent = Math.round(z * 100) + '%';
+}
+async function renderPreview() {
+  if (!docxFile || !items.length) return;
+  if (pvBusy) { pvAgain = true; return; }
+  pvBusy = true; $('pvState').textContent = '미리보기 갱신 중…';
+  try {
+    const assign = {};
+    for (const it of [...items].sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true })))
+      if (it.section > 0) (assign[it.section] = assign[it.section] || []).push(await smallImg(it));
+    const { blob } = await assemble(docxFile, LIB, assign, { diagrams: $('optDiag').checked });
+    const pane = $('wordPane'), keep = pane.scrollTop, focus = pvFocus;
+    const tmp = document.createElement('div');
+    await docx.renderAsync(blob, tmp, null, { inWrapper: true, breakPages: true, ignoreLastRenderedPageBreak: true, useBase64URL: true, renderHeaders: false, renderFooters: false });
+    $('wordView').style.padding = '0'; $('wordView').replaceChildren(...tmp.childNodes);
+    fitZoom();
+    if (focus) scrollToSection(focus); else pane.scrollTop = keep;
+    $('pvState').textContent = '';
+  } catch (e) { console.error(e); $('pvState').innerHTML = '<span class="err">미리보기 오류: ' + (e.message || e) + '</span>'; }
+  pvBusy = false;
+  if (pvAgain) { pvAgain = false; renderPreview(); }
+}
+// 옮긴 항목의 사진 위치로 미리보기 이동
+function scrollToSection(k) {
+  const view = $('wordView'), pane = $('wordPane');
+  const re = new RegExp('^\\s*1\\s*[–\\-]\\s*' + k + '\\s*\\.');
+  const head = Array.from(view.querySelectorAll('p')).find(p => re.test(p.textContent));
+  if (!head) return;
+  let target = head;
+  const next = Array.from(view.querySelectorAll('img')).filter(im => head.compareDocumentPosition(im) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const nextHead = Array.from(view.querySelectorAll('p')).find(p => (head.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING) && /^\s*1\s*[–\-]\s*\d+\s*\./.test(p.textContent));
+  const imgs = next.filter(im => !nextHead || (im.compareDocumentPosition(nextHead) & Node.DOCUMENT_POSITION_FOLLOWING));
+  const lastImg = imgs[imgs.length - 1];
+  if (lastImg) target = lastImg.closest('table') || lastImg;
+  const z = parseFloat(view.style.zoom) || 1;
+  pane.scrollTop = Math.max(0, (target.getBoundingClientRect().top - pane.getBoundingClientRect().top) + pane.scrollTop - 40);
+  target.classList.add('flash'); setTimeout(() => target.classList.remove('flash'), 1400);
+}
+// 마우스로 끌어서 위아래 이동
+(() => {
+  const pane = $('wordPane'); let y0 = null, s0 = 0;
+  pane.addEventListener('pointerdown', e => { if (e.button !== 0) return; y0 = e.clientY; s0 = pane.scrollTop; pane.classList.add('dragging'); pane.setPointerCapture(e.pointerId); });
+  pane.addEventListener('pointermove', e => { if (y0 === null) return; pane.scrollTop = s0 - (e.clientY - y0); });
+  const end = e => { y0 = null; pane.classList.remove('dragging'); };
+  pane.addEventListener('pointerup', end); pane.addEventListener('pointercancel', end);
+})();
+$('zIn').onclick = () => { zoom = Math.min(2, (parseFloat($('wordView').style.zoom) || 1) + 0.1); fitZoom(); };
+$('zOut').onclick = () => { zoom = Math.max(0.3, (parseFloat($('wordView').style.zoom) || 1) - 0.1); fitZoom(); };
+$('zFit').onclick = () => { zoom = null; fitZoom(); };
+window.addEventListener('resize', () => { if (!zoom) fitZoom(); });
+$('optDiag').onchange = () => schedulePreview(null);
+$('optFill').onchange = () => schedulePreview(null);
 
 // ---------------------------------------------------------- ③ 워드 만들기 / 내려받기
 let downloads = null;
@@ -308,7 +402,8 @@ $('build').onclick = async () => {
       const it = use[i];
       $('binfo').textContent = `사진 정리 중 ${i + 1} / ${use.length}`;
       const bmp = await decode(it.file);
-      (assign[it.section] = assign[it.section] || []).push(await prepJpeg(bmp));
+      const box = boxFor((LIB.sections[String(it.section)] || {}).layout);
+      (assign[it.section] = assign[it.section] || []).push(await prepJpeg(bmp, 1400, $('optFill').checked ? box.w / box.h : null));
       bmp.close && bmp.close();
     }
     $('binfo').textContent = '워드에 넣는 중…';
@@ -316,12 +411,15 @@ $('build').onclick = async () => {
     lastBlob = blob; lastName = docxFile.name.replace(/\.docx$/i, '') + '_사진첨부.docx';
     const msg = await offer(blob, lastName);
     $('step2').classList.add('hidden'); $('done').classList.remove('hidden');
-    $('doneMsg').innerHTML = `<b>${lastName}</b> (${(blob.size / 1048576).toFixed(1)} MB) — ${msg}<ul>${report.map(r => `<li>1-${r.k}. ${r.title}: ${r.msg}</li>`).join('')}</ul>`;
+    const total = report.reduce((a, r) => a + (r.n || 0), 0), excl = items.filter(i => i.section === 0).length;
+    const skipped = report.reduce((a, r) => a + (r.skipped || 0), 0);
+    $('doneMsg').innerHTML = `<div class="sum">워드에 들어간 사진 <b>총 ${total}장</b> <span class="muted">/ 올린 사진 ${items.length}장 · 제외 ${excl}장${skipped ? ` · <span class="err">못 넣은 사진 ${skipped}장</span>` : ''}</span></div>`
+      + `<b>${lastName}</b> (${(blob.size / 1048576).toFixed(1)} MB) — ${msg}<ul>${report.map(r => `<li>1-${r.k}. ${r.title}: ${r.msg}</li>`).join('')}</ul>`;
   } catch (e) { console.error(e); $('binfo').innerHTML = '<span class="err">오류: ' + (e.message || e) + '</span>'; }
   $('build').disabled = false;
 };
 $('dl').onclick = async () => { if (lastBlob) $('doneMsg').querySelector('b').insertAdjacentText('afterend', ''), await offer(lastBlob, lastName); };
-const restart = () => { items = []; $('done').classList.add('hidden'); $('step2').classList.add('hidden'); $('step1').classList.remove('hidden'); $('start').disabled = false; $('start').textContent = '자동 분류 시작'; $('prog').style.display = 'none'; };
+const restart = () => { items = []; document.querySelector('main').classList.remove('wide'); $('wordView').innerHTML = ''; $('done').classList.add('hidden'); $('step2').classList.add('hidden'); $('step1').classList.remove('hidden'); $('start').disabled = false; $('start').textContent = '자동 분류 시작'; $('prog').style.display = 'none'; };
 $('restart').onclick = restart; $('restart2').onclick = restart;
 window.__app = { get items() { return items; }, render: () => renderReview() };
 </script>

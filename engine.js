@@ -113,12 +113,28 @@ export function classify(emb, refs, minSim = 0.45, minMargin = 0.03) {
            status: (s1 >= minSim && s1 - s2 >= minMargin) ? 'ok' : 'check' };
 }
 
+// 섹션별 사진 칸(테두리 안) 크기. 2칸 배열은 원본 완성본 크기, 3칸 배열은 정사각형
+const TOTAL_TW = 8926;
+export function boxFor(layout) {
+  const L = layout || { cols: 2, box_w: 7.6 * EMU_CM, box_h: 7.6 * EMU_CM };
+  const cw = Math.floor(TOTAL_TW / L.cols);
+  const w = cw * 635 - Math.round(0.4 * EMU_CM);   // 칸 폭 - 좌우 여백
+  const h = L.cols >= 3 ? w : Math.round(L.box_h);
+  return { cols: L.cols, cw, w, h };
+}
+
 // 워드에 넣을 사진: 긴 변 1400px JPEG
-export async function prepJpeg(bitmap, maxPx = 1400) {
-  const sc = Math.min(1, maxPx / Math.max(bitmap.width, bitmap.height));
-  const w = Math.round(bitmap.width * sc), h = Math.round(bitmap.height * sc);
+// aspect(가로/세로)를 주면 칸 비율에 맞게 가운데를 잘라 칸을 꽉 채움
+export async function prepJpeg(bitmap, maxPx = 1400, aspect = null) {
+  let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
+  if (aspect) {
+    if (sw / sh > aspect) { const nw = sh * aspect; sx = (sw - nw) / 2; sw = nw; }
+    else { const nh = sw / aspect; sy = (sh - nh) / 2; sh = nh; }
+  }
+  const sc = Math.min(1, maxPx / Math.max(sw, sh));
+  const w = Math.round(sw * sc), h = Math.round(sh * sc);
   const c = new OffscreenCanvas(w, h); const g = c.getContext('2d');
-  g.imageSmoothingQuality = 'high'; g.drawImage(bitmap, 0, 0, w, h);
+  g.imageSmoothingQuality = 'high'; g.drawImage(bitmap, sx, sy, sw, sh, 0, 0, w, h);
   const blob = await c.convertToBlob({ type: 'image/jpeg', quality: 0.85 });
   return { data: new Uint8Array(await blob.arrayBuffer()), w, h };
 }
@@ -232,9 +248,8 @@ function importDiagram(doc, pkg, d) {
   return el;
 }
 
-function photoTableXml(cells, cols, boxW, boxH, totalTw = 8926) {
-  const cw = Math.floor(totalTw / cols);
-  boxW = Math.min(boxW, cw * 635 - Math.round(0.4 * EMU_CM));
+function photoTableXml(cells, box) {
+  const { cols, cw, w: boxW, h: boxH } = box;
   const rows = [];
   for (let i = 0; i < Math.max(1, Math.ceil(cells.length / cols)); i++) {
     let r = '<w:tr><w:trPr><w:cantSplit/></w:trPr>';
@@ -246,7 +261,7 @@ function photoTableXml(cells, cols, boxW, boxH, totalTw = 8926) {
         const cx = Math.round(it.w * sc), cy = Math.round(it.h * sc);
         run = `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="사진"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="photo.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${it.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
       }
-      r += `<w:tc><w:tcPr><w:tcW w:w="${cw}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr>${i < Math.ceil(cells.length / cols) - 1 ? '<w:keepNext/>' : ''}<w:jc w:val="center"/></w:pPr>${run}</w:p></w:tc>`;
+      r += `<w:tc><w:tcPr><w:tcW w:w="${cw}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr>${i < Math.ceil(cells.length / cols) - 1 ? '<w:keepNext/>' : ''}<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:ind w:left="0" w:right="0" w:firstLine="0"/><w:jc w:val="center"/></w:pPr>${run}</w:p></w:tc>`;
     }
     rows.push(r + '</w:tr>');
   }
@@ -273,22 +288,21 @@ export async function assemble(blankFile, lib, assign, opts = {}) {
       if (el.localName !== 'tbl') continue;
       for (const tr of kids(el, 'tr')) if (text(tr).startsWith(REPAIR_KEY)) { anchor = splitTableAt(el, tr); break outer; }
     }
-    if (!anchor) { report.push({ k: s.k, title: s.title, msg: '조치내역 표를 못 찾아 건너뜀' }); continue; }
+    if (!anchor) { report.push({ k: s.k, title: s.title, n: 0, skipped: (assign[s.k] || []).length, msg: '조치내역 표를 못 찾아 건너뜀' }); continue; }
     const add = [];
     let diag = false;
     if (opts.diagrams !== false && info.diagram) { add.push(importDiagram(doc, pkg, info.diagram)); diag = true; }
     const photos = assign[s.k] || [];
     if (photos.length) {
-      const L = info.layout || { cols: 2, box_w: 7.6 * EMU_CM, box_h: 7.6 * EMU_CM };
       const cells = photos.map(p => ({ rid: pkg.addImage(p.data, 'jpg'), w: p.w, h: p.h }));
-      add.push(doc.importNode(parse(photoTableXml(cells, L.cols, L.box_w, L.box_h)).documentElement, true));
+      add.push(doc.importNode(parse(photoTableXml(cells, boxFor(info.layout))).documentElement, true));
     }
     for (const el of add) {
       keepTogether(el);
       anchor.parentNode.insertBefore(el, anchor);
       anchor.parentNode.insertBefore(doc.createElementNS(NS.w, 'w:p'), anchor);
     }
-    report.push({ k: s.k, title: s.title, msg: `계통도 ${diag ? 'O' : 'X'} / 사진 ${photos.length}장` });
+    report.push({ k: s.k, title: s.title, n: photos.length, msg: `계통도 ${diag ? 'O' : 'X'} / 사진 ${photos.length}장` });
   }
   let id = 1;
   for (const dp of doc.getElementsByTagNameNS(NS.wp, 'docPr')) dp.setAttribute('id', String(id++));
