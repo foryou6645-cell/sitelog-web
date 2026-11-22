@@ -1,5 +1,5 @@
 // 정보통신설비 성능점검 — 현황사진 자동 배치 엔진 v2 (모든 처리는 이 PC 브라우저 안에서만)
-import * as ort from './ort.wasm.bundle.min.mjs?v=20261122c';
+import * as ort from './ort.wasm.bundle.min.mjs?v=20261122e';
 
 const NS = {
   w: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
@@ -55,7 +55,7 @@ export async function loadModel(onProgress) {
 }
 export async function loadExtraRefs() {
   try {
-    const j = await (await fetch('./refs_extra.json?v=20261122c')).json();
+    const j = await (await fetch('./refs_extra.json?v=20261122e')).json();
     return j.refs.map(r => ({ label: normFac(r.label), emb: b64ToF32(r.emb), src: 'extra' }));
   } catch (e) { return []; }
 }

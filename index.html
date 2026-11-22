@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="./jszip.min.js?v=20261122c"></script>
-<script src="./docx-preview.min.js?v=20261122c"></script>
+<script src="./jszip.min.js?v=20261122e"></script>
+<script src="./docx-preview.min.js?v=20261122e"></script>
 <script>
 // 멈추면 이유를 화면에 보여줌
 window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span class="err">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침해 주세요</span>'; });
@@ -68,11 +68,15 @@ table.map tr.q select{border-color:#f0a35c}
 .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
 .t-ok{background:#d9f5ef;color:#0d8a7a}.t-q{background:var(--amberbg);color:var(--amber)}.t-x{background:#fde2e2;color:var(--red2)}.t-g{background:#e9eef4;color:#56657a}
 /* 3. 확인 화면 */
-.tool{display:flex;align-items:center;gap:10px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:59px;z-index:20}
+.tool{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap;z-index:20}
+.tool .pill.sm{padding:6px 12px}
+#sumTxt{font-size:12px}
 .tool .sel{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:6px}
 .tool select,.tool input{padding:7px 10px;border-radius:10px;border:1.5px solid #c8d3df;font-size:13px;background:#fff}
 .tool .sp{flex:1}
-.three{display:grid;grid-template-columns:200px minmax(0,1fr) 560px;grid-template-rows:minmax(0,1fr);height:calc(100vh - 122px)}
+#s3:not(.hidden){display:flex;flex-direction:column;height:calc(100vh - 59px)}
+.three{display:grid;grid-template-columns:200px minmax(0,1fr) 560px;grid-template-rows:minmax(0,1fr);flex:1;min-height:0}
+@media (max-width:1500px){.three{grid-template-columns:170px minmax(0,1fr) 470px}}
 .wordcol{display:flex;flex-direction:column;background:#8b929c;min-width:0;min-height:0;overflow:hidden}
 .wbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);font-size:13px}
 .wbar .wst{color:var(--teal);font-weight:700}
@@ -137,6 +141,21 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
 .h3{font-size:15px;font-weight:800;margin:4px 0 8px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 22px;border-radius:99px;font-size:14px;font-weight:600;z-index:80;opacity:0;transition:.25s;pointer-events:none}
 .toast.on{opacity:1}
+.toast.act{pointer-events:auto}
+.toast button{margin-left:12px;background:var(--mint);color:var(--navy);border:0;border-radius:99px;padding:5px 14px;font-weight:800;cursor:pointer;font-family:inherit}
+.mv{position:absolute;left:3px;top:3px;height:22px;padding:0 8px;border-radius:99px;background:rgba(11,31,58,.82);color:#fff;font-size:12px;line-height:22px;font-weight:700;opacity:0;cursor:pointer;transition:.12s;z-index:2;white-space:nowrap}
+.ph:hover .mv,.wph:hover .mv,.th:hover .mv{opacity:1}
+.wph .mv{font-size:11px}
+.ctx{position:fixed;z-index:85;background:#fff;border-radius:14px;box-shadow:0 14px 44px rgba(11,31,58,.28);width:300px;max-height:80vh;overflow:auto;padding:10px;font-size:13px}
+.ctx .ch{display:flex;gap:10px;align-items:center;padding:4px 4px 10px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.ctx .ch img{width:46px;height:46px;object-fit:cover;border-radius:8px}
+.ctx .sec{font-size:11px;letter-spacing:1.5px;color:var(--mint);font-weight:800;margin:8px 4px 4px;text-transform:uppercase}
+.ctx button.mi{display:flex;justify-content:space-between;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:9px;font-size:13px;font-family:inherit;cursor:pointer;color:var(--ink)}
+.ctx button.mi:hover:not(:disabled){background:#e9faf6}
+.ctx button.mi:disabled{color:#a8b3c2;cursor:default}
+.ctx button.mi.cur{background:#f0f4f8;font-weight:700}
+.ctx select{width:100%;padding:7px 9px;border-radius:9px;border:1.5px solid #c8d3df;font-size:13px;margin:2px 0 4px;font-family:inherit}
+.ctx .row2{display:flex;gap:6px}.ctx .row2 button{flex:1;justify-content:center}
 /* 모달 */
 .modal{position:fixed;inset:0;background:rgba(11,31,58,.55);display:flex;align-items:center;justify-content:center;z-index:90}
 .modal .in{background:#fff;border-radius:18px;max-width:92vw;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
@@ -148,6 +167,34 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
 .cf .btns{display:flex;gap:10px;justify-content:center;margin-top:18px}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:440px;background:#fff;z-index:95;box-shadow:-10px 0 40px rgba(0,0,0,.15);padding:24px;overflow:auto;transform:translateX(100%);transition:.25s}
 .drawer.on{transform:none}
+.gstrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#e9faf6;border:1.5px solid #bfe9df;border-radius:14px;padding:12px 16px;margin-bottom:18px;font-size:15px}
+.gstrip .gt{font-weight:800;color:var(--navy2)}
+.gstrip .st{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.gstrip .n{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#e08a2c;color:#fff;font-weight:800;font-size:13px;align-items:center;justify-content:center}
+.gstrip .ar2{color:#8fb9b0;font-weight:800}
+.gstrip .pill{margin-left:auto}
+.gbox{width:min(1180px,94vw);padding:0!important;display:flex;flex-direction:column}
+.gbox .gh{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.gbox .gh h3{margin:0;font-size:19px}
+.gbox .gb{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:0}
+.gbox .gimg{background:#eef2f6;padding:14px;display:flex;align-items:center;justify-content:center}
+.gbox .gimg img{max-width:100%;max-height:68vh;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.15);cursor:zoom-in}
+.gbox ol.gl{margin:0;padding:18px 20px 18px 18px;list-style:none;display:flex;flex-direction:column;gap:14px;font-size:16px;line-height:1.5}
+.gbox ol.gl li{display:grid;grid-template-columns:30px 1fr;gap:8px}
+.gbox ol.gl li .n{width:28px;height:28px;border-radius:50%;background:#e08a2c;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.gbox ol.gl li.tip .n{background:var(--mint)}
+.gbox .gf{display:flex;align-items:center;gap:10px;padding:12px 20px;border-top:1px solid var(--line)}
+.gbox .dots{display:flex;gap:6px;margin:0 auto}.gbox .dots i{width:9px;height:9px;border-radius:50%;background:#cfd8e3;cursor:pointer}.gbox .dots i.on{background:var(--navy2)}
+.kbd{display:inline-block;border:1.5px solid #c8d3df;border-bottom-width:3px;border-radius:6px;padding:0 6px;font-size:13px;font-weight:700;background:#fff}
+.btnlike{display:inline-block;border-radius:99px;padding:1px 10px;font-weight:800;font-size:14px;background:var(--navy);color:#fff;white-space:nowrap}
+.btnlike.o{background:#fff;color:var(--ink);border:1.5px solid #c8d3df}
+.drawer .gsec{margin:18px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+.drawer .gsec img{width:100%;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
+.drawer .gsec ol{padding-left:0;list-style:none;font-size:14px;line-height:1.6}
+.drawer .gsec ol li{display:grid;grid-template-columns:26px 1fr;gap:6px;margin:6px 0}
+.drawer .gsec ol li .n{width:22px;height:22px;border-radius:50%;background:#e08a2c;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.drawer .gsec ol li.tip .n{background:var(--mint)}
+.drawer{width:520px}
 .drawer ol{padding-left:20px;line-height:1.75;font-size:14px}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
 .kpi{background:var(--soft);border-radius:14px;padding:14px}
@@ -169,6 +216,7 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
   <div class="card">
     <div class="hd"><div class="lab">Step 1 · Upload</div><h2>워드 파일과 사진 폴더를 올려 주세요</h2><p>사진은 폴더째 올리면 폴더 이름으로 건물을 자동 연결합니다 (예: 서산성능점검 폴더 통째로)</p></div>
     <div class="bd">
+      <div class="gstrip"><span class="gt">이 화면에서 할 일</span><span class="st"><span class="n">1</span>워드 고르기</span><span class="ar2">→</span><span class="st"><span class="n">2</span>사진 폴더 고르기</span><span class="ar2">→</span><span class="st"><span class="n">3</span>자동 배치 시작</span><button class="pill o sm" data-guide="s1">📖 그림으로 보기</button></div>
       <div class="up">
         <div class="drop" id="dropDoc">
           <div class="lab">Word</div><h3>성능점검 워드 파일 (.docx)</h3>
@@ -199,6 +247,7 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
   <div class="card">
     <div class="hd"><div class="lab">Step 2 · Folder → Building</div><h2>사진 폴더를 워드의 어느 건물에 넣을지 확인</h2><p id="mapSum"></p></div>
     <div class="bd">
+      <div class="gstrip"><span class="gt">이 화면에서 할 일</span><span class="st"><span class="n">1</span>초록 줄은 그대로</span><span class="ar2">→</span><span class="st"><span class="n">2</span>주황 줄은 건물 고르기</span><span class="ar2">→</span><span class="st"><span class="n">3</span>다음 누르기</span><button class="pill o sm" data-guide="s2">📖 그림으로 보기</button></div>
       <table class="map"><thead><tr><th>사진 폴더</th><th>사진</th><th>미리보기</th><th>워드의 건물</th><th></th></tr></thead><tbody id="mapBody"></tbody></table>
       <div class="muted" id="noFolder" style="margin-top:14px"></div>
       <div class="go"><button class="pill o" id="mapBack">← 처음으로</button><span style="flex:1"></span><button class="pill t" id="mapNext">다음: 칸별 사진 확인 <span class="ar">→</span></button></div>
@@ -209,13 +258,15 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
 <!-- 3. 칸별 확인 -->
 <main id="s3" class="wide hidden">
   <div class="tool">
-    <button class="pill o sm" id="toMap">② 폴더→건물 연결</button>
+    <button class="pill t sm" data-guide="s3" id="g3btn">📖 사용법</button>
+    <button class="pill o sm" id="toMap">폴더→건물</button>
     <span class="sel">칸당 최대 <select id="cap"></select></span>
     <span class="sel">배치 <select id="mode"><option value="fill">칸 꽉 채우기</option><option value="fit">사진 전체 보이기</option></select></span>
     <span class="sel">기존 사진 <select id="policy"><option value="tidy">유지 · 칸에 맞게 정리</option><option value="replace">지우고 새로 넣기</option></select></span>
-    <span class="sel">찾기 <input id="find" placeholder="파일 이름 (예: 133959)" style="width:170px"></span>
+    <span class="sel">찾기 <input id="find" placeholder="파일 이름 (예: 133959)" style="width:150px"></span>
     <span class="sp"></span>
     <span class="muted" id="sumTxt"></span>
+    <button class="pill o sm" id="undo" disabled title="Ctrl+Z">↶ 되돌리기</button><button class="pill o sm" id="redo" disabled title="Ctrl+Y">↷</button>
     <button class="pill r sm" id="reset1">처음으로</button>
     <button class="pill t" id="build">워드 만들기 <span class="ar">→</span></button>
   </div>
@@ -233,6 +284,7 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
   <div class="card">
     <div class="hd"><div class="lab">Done</div><h2>워드 완성</h2></div>
     <div class="bd">
+      <div class="gstrip"><span class="gt">이 화면에서 할 일</span><span class="st"><span class="n">1</span>초록 글씨 확인</span><span class="ar2">→</span><span class="st"><span class="n">2</span>워드 내려받기</span><span class="ar2">→</span><span class="st"><span class="n">3</span>고칠 게 있으면 뒤로가기</span><button class="pill o sm" data-guide="s4">📖 그림으로 보기</button></div>
       <div id="verify"></div>
       <div class="kpis" id="doneKpi"></div>
       <div class="go">
@@ -248,21 +300,20 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
 <div class="modal cf hidden" id="cf"><div class="in"><h3>내용을 정말 초기화 하시겠습니까?</h3><div class="muted">올린 워드와 사진, 옮긴 내용이 모두 지워집니다.</div><div class="btns"><button class="pill r" id="cfYes">예</button><button class="pill o" id="cfNo">아니오</button></div></div></div>
 <div class="modal hidden" id="lbox"><div class="in lb"><img id="lbImg" alt=""><div class="info" id="lbInfo"></div></div></div>
 <div class="drawer" id="drawer">
-  <div style="display:flex;justify-content:space-between;align-items:center"><div><div class="lab">Guide</div><h2 style="margin:4px 0 0">사용법</h2></div><button class="pill o sm" id="helpClose">닫기</button></div>
-  <ol>
-    <li><b>워드 파일</b>과 <b>사진 폴더</b>(예: 서산성능점검 폴더 통째로)를 올리고 <b>자동 배치 시작</b>.</li>
-    <li><b>폴더→건물</b> 화면에서 폴더마다 넣을 건물을 확인합니다. 이름이 정확히 맞는 폴더는 자동 연결, 애매한 폴더는 <span class="tag t-q">확인 필요</span>로 표시됩니다. 모르면 "넣지 않음"으로 두고 나중에 직접 끌어다 넣어도 됩니다.</li>
-    <li><b>칸별 확인</b> 화면: 왼쪽에서 건물을 고르면 가운데에 그 건물의 현황사진 칸이 <b>워드와 같은 모양</b>으로 보입니다. 오른쪽 <b>보관함</b>에는 칸에 안 들어간 사진이 찍은 시간 순서로 있습니다.</li>
-    <li>사진을 <b>끌어서</b> 다른 칸이나 보관함에 놓으면 바로 반영됩니다. 칸 안 사진 위에 놓으면 그 앞으로 순서가 바뀝니다. 칸 하나에 최대 8장, 장수에 맞춰 크기가 자동으로 맞춰집니다.</li>
-    <li>사진을 <b>누르면</b> 크게 보이고 폴더·파일명·위치가 나옵니다. 위의 <b>찾기</b>에 파일 이름 일부를 넣으면 그 사진이 있는 칸으로 바로 이동합니다.</li>
-    <li>설비 종류 자동 추천은 완벽하지 않습니다. 칸마다 한 번씩 확인해 주세요.</li>
-    <li><b>워드 만들기</b> → 검사 통과 후 내려받기. 계통도·도형은 건드리지 않고, 바뀐 칸만 새로 만듭니다.</li>
-  </ol>
+  <div style="display:flex;justify-content:space-between;align-items:center"><div><div class="lab">Guide</div><h2 style="margin:4px 0 0">전체 사용법</h2></div><button class="pill o sm" id="helpClose">닫기</button></div>
+  <div class="muted" style="margin-top:6px">순서대로 따라 하면 됩니다. 그림을 누르면 크게 보여요.</div>
+  <div id="drawerBody"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="ctx hidden" id="ctx"></div>
+<div class="modal hidden" id="gm"><div class="in gbox">
+  <div class="gh"><div><div class="lab" id="gmLab">Guide</div><h3 id="gmTitle"></h3></div><span style="flex:1"></span><button class="pill o sm" id="gmClose">닫기 ✕</button></div>
+  <div class="gb"><div class="gimg"><img id="gmImg" alt=""></div><ol class="gl" id="gmList"></ol></div>
+  <div class="gf"><button class="pill o sm" id="gmPrev">← 이전</button><div class="dots" id="gmDots"></div><button class="pill p sm" id="gmNext">다음 →</button></div>
+</div></div>
 
 <script type="module">
-import { loadModel, loadExtraRefs, readDoc, analyzeOlds, preparePhoto, finishPhoto, shotTime, autoMap, bestGrid, layoutCell, dot, buildDocx, photoJpeg, oldJpeg, miniDocx, decodeTo } from './engine2.js?v=20261122c';
+import { loadModel, loadExtraRefs, readDoc, analyzeOlds, preparePhoto, finishPhoto, shotTime, autoMap, bestGrid, layoutCell, dot, buildDocx, photoJpeg, oldJpeg, miniDocx, decodeTo } from './engine2.js?v=20261122e';
 
 const $ = id => document.getElementById(id);
 const MAXCELL = 8;
@@ -271,7 +322,7 @@ const S = { docFile: null, photoFiles: [], D: null, photos: [], P: {}, O: {}, ma
 window.__app = S;
 
 // ---------------------------------------------------------------- 공통
-function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2200); }
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.remove('act'); el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2200); }
 function show(id) { for (const s of ['s1', 's2', 's3', 's4']) $(s).classList.toggle('hidden', s !== id); window.scrollTo(0, 0); }
 function prog(p, txt) { $('pbar').style.width = (p * 100).toFixed(1) + '%'; $('ptxt').textContent = Math.round(p * 100) + '%'; if (txt !== undefined) $('pinfo').textContent = txt; }
 const fmtT = t => { if (!t) return ''; const d = new Date(t); return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`; };
@@ -420,7 +471,7 @@ $('mapNext').onclick = () => {
   mapSnapshot = { ...S.map };
   for (const k of changed) if (!S.touched.has(k)) autoAssign(k);
   if (!S.curB) S.curB = (S.D.buildings.find(b => b.cells.some(ci => S.cellItems[ci].some(x => x[0] === 'n'))) || S.D.buildings[0]).key;
-  show('s3'); renderAll();
+  show('s3'); renderAll(); maybeFirstGuide();
 };
 $('toMap').onclick = () => { renderMap(); show('s2'); };
 
@@ -503,7 +554,7 @@ function cellHtml(ci) {
   if (arr.length) {
     const sc = CW / c.box.W, tiles = layoutCell(arr.map(k => item(k).aspect), c.box.W, c.box.H, S.mode);
     tiles.forEach((t, i) => { const key = arr[i], it = item(key);
-      inner += `<div class="ph" draggable="${!c.locked}" data-k="${key}" style="position:absolute;left:${((t.x + t.ix) * sc).toFixed(1)}px;top:${((t.y + t.iy) * sc).toFixed(1)}px;width:${(t.iw * sc).toFixed(1)}px;height:${(t.ih * sc).toFixed(1)}px;margin:0"><img src="${it.thumb || ''}" alt="">${key[0] === 'o' ? '<span class="badge">기존</span>' : ''}${c.locked ? '' : '<span class="x" title="보관함으로">×</span>'}</div>`; });
+      inner += `<div class="ph" draggable="${!c.locked}" data-k="${key}" style="position:absolute;left:${((t.x + t.ix) * sc).toFixed(1)}px;top:${((t.y + t.iy) * sc).toFixed(1)}px;width:${(t.iw * sc).toFixed(1)}px;height:${(t.ih * sc).toFixed(1)}px;margin:0"><img src="${it.thumb || ''}" alt="">${key[0] === 'o' ? '<span class="badge">기존</span>' : ''}${c.locked ? '' : '<span class="mv" title="다른 칸으로 옮기기">⇄ 옮기기</span><span class="x" title="보관함으로">×</span>'}</div>`; });
   } else inner = '<div class="hint">사진을 여기로<br>끌어다 놓으세요</div>';
   const cnt = arr.length ? `<span class="tag ${arr.length > S.cap ? 't-q' : 't-ok'} cnt">${arr.length}장</span>` : '<span class="tag t-x cnt">빈 칸</span>';
   return `<div class="cell" style="--cw:${CW}px"><div class="ct" data-ci="${ci}" title="누르면 왼쪽 워드의 이 칸으로 이동">${esc(c.f)}${c.locked ? ' <span class="tag t-g">🔒 그대로 둠</span>' : ''}${cnt}</div>
@@ -519,13 +570,13 @@ function renderBoard() {
     <h2>${esc(b.name)} — ${b.cells.length}칸${st.n ? ' · 새 사진 ' + st.n + '장' : ''}</h2></div>
     <button class="pill o sm" id="reAuto" ${folders.length ? '' : 'disabled'}>자동 배치 다시</button></div>
     <div class="cells">${b.cells.map(cellHtml).join('')}</div>`;
-  $('reAuto').onclick = () => { autoAssign(b.key); S.touched.delete(b.key); rerenderSoft(b.cells); toast('이 건물을 자동 배치로 되돌렸습니다'); };
+  $('reAuto').onclick = () => { remember(`${b.name} 자동 배치 다시`); autoAssign(b.key); S.touched.delete(b.key); rerenderSoft(b.cells); toast('이 건물을 자동 배치로 되돌렸습니다'); };
   wireBoard();
 }
 function thHtml(k) {
   const it = item(k); const isOld = k[0] === 'o';
   const badge = isOld ? '<span class="badge">기존</span>' : (it.dup ? '<span class="badge" title="이미 워드에 있는 사진과 같아 보입니다">이미 있음?</span>' : '');
-  return `<div class="th" draggable="true" data-k="${k}" title="${esc(isOld ? '기존 사진' : it.folder + '/' + it.name)}"><img src="${it.thumb || ''}" alt="">${badge}${isOld ? '' : `<span class="tm">${fmtT(it.t)}</span>`}</div>`;
+  return `<div class="th" draggable="true" data-k="${k}" title="${esc(isOld ? '기존 사진' : it.folder + '/' + it.name)}"><img src="${it.thumb || ''}" alt="">${badge}<span class="mv" title="칸으로 넣기" style="top:auto;bottom:18px">⇄ 넣기</span>${isOld ? '' : `<span class="tm">${fmtT(it.t)}</span>`}</div>`;
 }
 function renderRight() {
   const b = bOf(S.curB); if (!b) return;
@@ -594,7 +645,7 @@ function patchCell(ci) {
   const tiles = layoutCell(arr.map(k => item(k).aspect), c.box.W, c.box.H, S.mode);
   let html = `<div style="${box}">`;
   tiles.forEach((t, i) => { const key = arr[i]; const src = hiUrl(key) || item(key).thumb;
-    html += `<div class="wph" data-k="${key}" draggable="${!c.locked}" style="position:absolute;margin:0;left:${((t.x + t.ix) / 20).toFixed(2)}pt;top:${((t.y + t.iy) / 20).toFixed(2)}pt;width:${(t.iw / 20).toFixed(2)}pt;height:${(t.ih / 20).toFixed(2)}pt"><img data-hk="${key}" src="${src}" alt=""></div>`; });
+    html += `<div class="wph" data-k="${key}" draggable="${!c.locked}" style="position:absolute;margin:0;left:${((t.x + t.ix) / 20).toFixed(2)}pt;top:${((t.y + t.iy) / 20).toFixed(2)}pt;width:${(t.iw / 20).toFixed(2)}pt;height:${(t.ih / 20).toFixed(2)}pt"><img data-hk="${key}" src="${src}" alt="">${c.locked ? '' : '<span class="mv" title="다른 칸으로 옮기기">⇄ 옮기기</span>'}</div>`; });
   td.innerHTML = html + '</div>'; td._st = 'new';
 }
 function wireTd(td, ci) {
@@ -605,7 +656,9 @@ function wireTd(td, ci) {
     const ph = e.target.closest('[data-k]'); moveTo(k, ci, ph && ph.dataset.k !== k && S.cellItems[ci].includes(ph.dataset.k) ? ph.dataset.k : null); });
   td.addEventListener('dragstart', e => { const el = e.target.closest('[data-k]'); if (!el) return; dragKey = el.dataset.k; e.dataTransfer.setData('text/plain', dragKey); e.dataTransfer.effectAllowed = 'move'; });
   td.addEventListener('dragend', () => { dragKey = null; });
-  td.addEventListener('click', e => { const el = e.target.closest('[data-k]'); if (!el) return; e.stopPropagation(); boardFocus(el.dataset.k); flashEl(el); });
+  td.addEventListener('click', e => { const el = e.target.closest('[data-k]'); if (!el) return; e.stopPropagation();
+    if (e.target.classList.contains('mv')) { const r = e.target.getBoundingClientRect(); openMenu(el.dataset.k, r.left, r.bottom + 4); return; }
+    boardFocus(el.dataset.k); flashEl(el); });
   td.addEventListener('dblclick', e => { const el = e.target.closest('[data-k]'); if (el) openLb(el.dataset.k); });
 }
 function flashEl(el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
@@ -648,17 +701,95 @@ function moveTo(k, ci, beforeKey) {
   const arr = S.cellItems[ci];
   if (from !== ci && arr.length >= MAXCELL) { toast(`칸 하나에는 최대 ${MAXCELL}장까지 넣을 수 있습니다`); return; }
   if (from >= 0 && S.D.cells[from].locked) { toast('그대로 두는 칸의 사진은 옮길 수 없습니다'); return; }
+  const label = `${pname(k)} : ${from >= 0 ? cname(from) : '보관함'} → ${cname(ci)}`;
+  remember(label);
   removeKey(k);
   let i = beforeKey ? arr.indexOf(beforeKey) : -1; if (i < 0) i = arr.length;
   arr.splice(i, 0, k);
   S.touched.add(c.bkey); if (from >= 0) S.touched.add(S.D.cells[from].bkey);
   rerenderSoft([ci, from]); flash(k);
+  if (from !== ci) toastAct(label, '되돌리기', undo);
 }
 function toTray(k) {
   const from = locOf(k); if (from < 0) return;
   if (S.D.cells[from].locked) { toast('그대로 두는 칸의 사진은 옮길 수 없습니다'); return; }
+  const label = `${pname(k)} : ${cname(from)} → 보관함`;
+  remember(label);
   removeKey(k); S.touched.add(S.D.cells[from].bkey); rerenderSoft([from]);
+  toastAct(label, '되돌리기', undo);
 }
+function reorder(k, how) {
+  const ci = locOf(k); if (ci < 0 || S.D.cells[ci].locked) return;
+  const a = S.cellItems[ci], i = a.indexOf(k); let j = how === 'first' ? 0 : i + how;
+  j = Math.max(0, Math.min(a.length - 1, j)); if (j === i) return;
+  remember(`${pname(k)} 순서 바꾸기`);
+  a.splice(i, 1); a.splice(j, 0, k); S.touched.add(S.D.cells[ci].bkey); rerenderSoft([ci]); flash(k);
+}
+// ---------------------------------------------------------------- 되돌리기 / 다시
+const HIST = { past: [], fut: [] };
+const pname = k => k[0] === 'n' ? S.P[k].name : '기존 사진';
+const cname = ci => { const c = S.D.cells[ci]; const b = bOf(c.bkey); return (b.key === S.curB ? '' : b.name + ' ') + c.f; };
+function snap() { return { items: S.cellItems.map(a => a.slice()), touched: [...S.touched] }; }
+function remember(label) { HIST.past.push({ ...snap(), label }); if (HIST.past.length > 300) HIST.past.shift(); HIST.fut = []; updUndo(); }
+function updUndo() { $('undo').disabled = !HIST.past.length; $('redo').disabled = !HIST.fut.length;
+  $('undo').title = HIST.past.length ? '되돌리기: ' + HIST.past[HIST.past.length - 1].label + ' (Ctrl+Z)' : '되돌릴 것이 없습니다'; }
+function restore(st) {
+  const before = S.cellItems; S.cellItems = st.items.map(a => a.slice()); S.touched = new Set(st.touched);
+  const changed = []; before.forEach((a, ci) => { const b = S.cellItems[ci]; if (a.length !== b.length || a.some((k, i) => k !== b[i])) changed.push(ci); });
+  // 사진이 돌아간 칸(늘어난 칸)을 보여줌 — 다른 건물이면 그 건물로 이동
+  const gained = changed.find(ci => S.cellItems[ci].length > before[ci].length) ?? changed[0];
+  if (gained !== undefined && S.D.cells[gained].bkey !== S.curB) { S.curB = S.D.cells[gained].bkey; renderAll(); }
+  else rerenderSoft(changed);
+  for (const ci of changed) patchCell(ci);
+  if (gained !== undefined) setTimeout(() => wordCell(gained), 150);
+}
+function undo() { if (!HIST.past.length) return; const st = HIST.past.pop(); HIST.fut.push({ ...snap(), label: st.label }); restore(st); updUndo(); toast('↶ 되돌림: ' + st.label); }
+function redo() { if (!HIST.fut.length) return; const st = HIST.fut.pop(); HIST.past.push({ ...snap(), label: st.label }); restore(st); updUndo(); toast('↷ 다시: ' + st.label); }
+function toastAct(t, btn, fn) {
+  const el = $('toast'); el.innerHTML = esc(t) + ` <button>${btn}</button>`; el.classList.add('on', 'act');
+  el.querySelector('button').onclick = () => { el.classList.remove('on', 'act'); fn(); };
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on', 'act'), 5000);
+}
+$('undo').onclick = undo; $('redo').onclick = redo;
+document.addEventListener('keydown', e => {
+  if ($('s3').classList.contains('hidden') || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); }
+});
+// ---------------------------------------------------------------- 옮기기 메뉴 (오른쪽 클릭 또는 ⇄ 버튼)
+function openMenu(k, x, y, bsel) {
+  const it = item(k), ci = locOf(k);
+  const bkey = bsel || (ci >= 0 ? S.D.cells[ci].bkey : (k[0] === 'n' && S.map[S.P[k].folder]) || S.curB);
+  const b = bOf(bkey); const m = $('ctx');
+  const cells = b.cells.map(c2 => { const c = S.D.cells[c2], n = S.cellItems[c2].length, cur = c2 === ci;
+    const dis = cur || c.locked || n >= MAXCELL;
+    return `<button class="mi ${cur ? 'cur' : ''}" data-to="${c2}" ${dis ? 'disabled' : ''}><span>${cur ? '● ' : '→ '}${esc(c.f)}</span><span>${cur ? '지금 여기' : c.locked ? '🔒' : n >= MAXCELL ? '가득 참' : n + '장'}</span></button>`; }).join('');
+  const len = ci >= 0 ? S.cellItems[ci].length : 0, idx = ci >= 0 ? S.cellItems[ci].indexOf(k) : -1;
+  m.innerHTML = `<div class="ch"><img src="${it.thumb || ''}"><div><div style="font-weight:800;word-break:break-all">${esc(pname(k))}</div><div class="muted" style="font-size:12px">지금: ${esc(whereText(k))}</div></div></div>
+    <div class="sec">이 칸으로 옮기기</div>
+    <select id="ctxB">${S.D.buildings.map(x => `<option value="${esc(x.key)}" ${x.key === bkey ? 'selected' : ''}>1.${x.n} ${esc(x.name)}</option>`).join('')}</select>
+    ${cells}
+    ${ci >= 0 && !S.D.cells[ci].locked ? `<div class="sec">칸 안 순서</div><div class="row2">
+      <button class="mi" data-ord="first" ${idx <= 0 ? 'disabled' : ''}>⇤ 맨 앞</button><button class="mi" data-ord="-1" ${idx <= 0 ? 'disabled' : ''}>← 앞</button><button class="mi" data-ord="1" ${idx >= len - 1 ? 'disabled' : ''}>뒤 →</button></div>
+      <div class="sec">기타</div><button class="mi" data-act="tray"><span>보관함으로 빼기</span><span>칸에서 빼기</span></button>` : '<div class="sec">기타</div>'}
+    <button class="mi" data-act="lb"><span>크게 보기</span></button>
+    ${ci >= 0 ? '<button class="mi" data-act="go"><span>워드에서 위치 보기</span></button>' : ''}`;
+  m.classList.remove('hidden');
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.min(x, innerWidth - r.width - 10) + 'px'; m.style.top = Math.max(10, Math.min(y, innerHeight - r.height - 10)) + 'px';
+  $('ctxB').onchange = e => { const r0 = m.getBoundingClientRect(); openMenu(k, r0.left, r0.top, e.target.value); };
+  m.querySelectorAll('[data-to]').forEach(bt => bt.onclick = () => { closeMenu(); moveTo(k, +bt.dataset.to); if (S.D.cells[+bt.dataset.to].bkey !== S.curB) { S.curB = S.D.cells[+bt.dataset.to].bkey; renderAll(); } setTimeout(() => wordFocus(k), 120); });
+  m.querySelectorAll('[data-ord]').forEach(bt => bt.onclick = () => { closeMenu(); reorder(k, bt.dataset.ord === 'first' ? 'first' : +bt.dataset.ord); });
+  m.querySelectorAll('[data-act]').forEach(bt => bt.onclick = () => { closeMenu(); const a = bt.dataset.act; if (a === 'tray') toTray(k); else if (a === 'lb') openLb(k); else goTo(k); });
+}
+function closeMenu() { $('ctx').classList.add('hidden'); }
+document.addEventListener('mousedown', e => { if (!$('ctx').classList.contains('hidden') && !e.target.closest('#ctx')) closeMenu(); }, true);
+document.addEventListener('contextmenu', e => {
+  if ($('s3').classList.contains('hidden')) return;
+  const el = e.target.closest('#wview [data-k], #rboard [data-k], #rtray [data-k]'); if (!el) return;
+  e.preventDefault(); openMenu(el.dataset.k, e.clientX, e.clientY);
+});
+$('wpane').addEventListener('wheel', closeMenu, { passive: true });
 function rerenderSoft(cells) {
   const st = $('rboard').scrollTop, rt = $('rtray').scrollTop; const open = [...document.querySelectorAll('#rtray details[open] summary')].map(s => s.textContent.split(' · ')[0]);
   renderList(); renderBoard(); renderRight(); renderSum(); $('rboard').scrollTop = st; $('rtray').scrollTop = rt;
@@ -677,7 +808,7 @@ function wireBoard() {
   for (const ct of $('rboard').querySelectorAll('.ct')) ct.addEventListener('click', () => wordCell(+ct.dataset.ci));
   for (const ph of $('rboard').querySelectorAll('.ph')) {
     if (ph.getAttribute('draggable') === 'true') startDrag(ph);
-    ph.addEventListener('click', e => { if (e.target.classList.contains('x')) { toTray(ph.dataset.k); return; } flashEl(ph); wordFocus(ph.dataset.k); });
+    ph.addEventListener('click', e => { if (e.target.classList.contains('x')) { toTray(ph.dataset.k); return; } if (e.target.classList.contains('mv')) { const r = e.target.getBoundingClientRect(); openMenu(ph.dataset.k, r.left, r.bottom + 4); return; } flashEl(ph); wordFocus(ph.dataset.k); });
     ph.addEventListener('dblclick', () => openLb(ph.dataset.k));
   }
 }
@@ -687,7 +818,7 @@ function wireRight() {
     t.addEventListener('dragleave', () => t.classList.remove('over'));
     t.addEventListener('drop', e => { e.preventDefault(); t.classList.remove('over'); const k = dragKey || e.dataTransfer.getData('text/plain'); if (k) toTray(k); });
   }
-  for (const th of $('rtray').querySelectorAll('.th')) { startDrag(th); th.addEventListener('click', () => openLb(th.dataset.k)); }
+  for (const th of $('rtray').querySelectorAll('.th')) { startDrag(th); th.addEventListener('click', e => { if (e.target.classList.contains('mv')) { const r = e.target.getBoundingClientRect(); openMenu(th.dataset.k, r.left, r.bottom + 4); return; } openLb(th.dataset.k); }); }
 }
 
 // ---------------------------------------------------------------- 크게 보기 · 찾기
@@ -735,9 +866,9 @@ $('find').addEventListener('keydown', e => {
   const idx = (S._findI = ((S._findQ === q ? S._findI : -1) + 1) % hit.length); S._findQ = q;
   goTo(hit[idx].id); toast(`${hit.length}장 중 ${idx + 1}번째: ${whereText(hit[idx].id)}`);
 });
-$('cap').onchange = () => { S.cap = +$('cap').value; let n = 0; for (const b of S.D.buildings) if (!S.touched.has(b.key)) { autoAssign(b.key); n++; } renderAll(); toast(`칸당 최대 ${S.cap}장으로 다시 배치했습니다 (직접 고친 건물은 그대로)`); };
+$('cap').onchange = () => { remember(`칸당 최대 ${S.cap}장 → ${$('cap').value}장`); S.cap = +$('cap').value; let n = 0; for (const b of S.D.buildings) if (!S.touched.has(b.key)) { autoAssign(b.key); n++; } renderAll(); toast(`칸당 최대 ${S.cap}장으로 다시 배치했습니다 (직접 고친 건물은 그대로)`); };
 $('mode').onchange = () => { S.mode = $('mode').value; rerenderSoft(); for (const ci of (bOf(S.curB) || { cells: [] }).cells) patchCell(ci); for (const [k, e] of W.cache) if (k !== S.curB) W.cache.delete(k); toast(S.mode === 'fill' ? '칸을 빈틈없이 꽉 채웁니다 (가장자리 조금 잘림)' : '사진 전체가 보이게 넣습니다 (여백 생김)'); };
-$('policy').onchange = () => { S.policy = $('policy').value; for (const b of S.D.buildings) if (!S.touched.has(b.key)) autoAssign(b.key); renderAll();
+$('policy').onchange = () => { remember('기존 사진 처리 방식 바꾸기'); S.policy = $('policy').value; for (const b of S.D.buildings) if (!S.touched.has(b.key)) autoAssign(b.key); renderAll();
   toast(S.policy !== 'replace' ? '기존 사진은 그대로 두고(칸에 맞게 정리) 빈 칸만 채웁니다' : '기존 사진을 보관함으로 빼고 새 사진으로 채웁니다'); };
 
 // ---------------------------------------------------------------- 4. 워드 만들기
@@ -769,7 +900,7 @@ $('build').onclick = async () => {
     const secs = ((performance.now() - t0) / 1000).toFixed(0);
     let empty = 0; S.cellItems.forEach(a => { if (!a.length) empty++; });
     $('verify').innerHTML = `<div class="vok">✔ 검사 통과 — 계통도·도형 ${D.anchors}개 그대로, 사진 칸 ${res.cellsChanged}개에 사진 ${res.placed}장이 화면과 똑같이 들어감</div>`;
-    $('doneKpi').innerHTML = `<div class="kpi"><div class="v">${res.placed}장</div><div class="k">바뀐 칸에 넣은 사진</div></div>
+    $('doneKpi').innerHTML = `<div class="kpi"><div class="v">${res.placed}장</div><div class="k">칸에 넣은 사진 (기존 사진 포함)</div></div>
       <div class="kpi"><div class="v">${(res.blob.size / 1e6).toFixed(1)}MB</div><div class="k">완성 워드 크기 (원본 ${(S.docFile.size / 1e6).toFixed(1)}MB)</div></div>
       <div class="kpi"><div class="v">${secs}초</div><div class="k">워드 만드는 데 걸린 시간</div></div>
       <div class="kpi"><div class="v" style="color:${empty ? 'var(--red2)' : ''}">${empty}칸</div><div class="k">사진 없는 빈 칸 (전체 ${D.cells.length}칸)</div></div>`;
@@ -793,15 +924,84 @@ $('cfYes').onclick = () => {
   if (S.D) for (const o of S.D.olds) if (o.thumb) URL.revokeObjectURL(o.thumb);
   if (S.dlUrl) URL.revokeObjectURL(S.dlUrl);
   Object.assign(S, { docFile: null, photoFiles: [], D: null, photos: [], P: {}, O: {}, map: {}, auto: {}, cellItems: [], curB: null, touched: new Set(), dlUrl: null });
-  W.cache.clear(); W.order = []; $('wview').innerHTML = '';
+  W.cache.clear(); W.order = []; $('wview').innerHTML = ''; HIST.past = []; HIST.fut = []; updUndo(); closeMenu();
   mapSnapshot = null; $('cap').value = '4'; S.cap = 4; $('policy').value = 'tidy'; S.policy = 'tidy'; $('mode').value = 'fill'; S.mode = 'fill';
   prog(0, ''); upd(); show('s1');
 };
+
+// ---------------------------------------------------------------- 사용법 (화면마다 그림 + 쉬운 설명)
+const B_ = (t, o) => `<span class="btnlike${o ? ' o' : ''}">${t}</span>`;
+const GUIDE = {
+  s1: { lab: 'Step 1 · 올리기', slides: [
+    { t: '워드와 사진 올리기', img: 'g1_upload', items: [
+      `${B_('파일 선택')}을 눌러 <b>워드 파일</b>을 골라요.`,
+      `${B_('폴더 선택')}을 눌러 <b>사진 폴더</b>를 통째로 골라요. (예: 서산성능점검 폴더)<br><span class="muted">“업로드할까요?” 창이 뜨면 [업로드]를 눌러요. 사진은 내 컴퓨터 밖으로 나가지 않아요.</span>`,
+      `${B_('자동 배치 시작 →')}을 눌러요.`,
+      ['tip', '막대가 <b>100%</b>가 될 때까지 기다려요. 사진 800장이면 2~4분쯤 걸려요.'] ] } ] },
+  s2: { lab: 'Step 2 · 폴더와 건물 짝 맞추기', slides: [
+    { t: '사진 폴더 ↔ 워드 건물 짝 맞추기', img: 'g2_map', items: [
+      `<span class="tag t-ok">자동 연결</span> 줄은 <b>그대로 두면 돼요.</b>`,
+      `<span class="tag t-q">확인 필요</span> 줄은 오른쪽 상자를 눌러 <b>맞는 건물</b>을 골라요. 모르면 “넣지 않음”으로 두고 나중에 직접 넣어도 돼요.`,
+      `${B_('다음: 칸별 사진 확인 →')}을 눌러요.`] } ] },
+  s3: { lab: 'Step 3 · 칸별 사진 확인', slides: [
+    { t: '화면 생김새', img: 'g3_screen', items: [
+      '<b>왼쪽</b>: 건물 목록이에요. 누르면 그 건물로 가요. <span class="tag t-x">빈 칸</span>은 사진이 없는 칸이에요.',
+      '<b>가운데</b>: 진짜 워드 모양이에요. 여기 보이는 그대로 워드가 만들어져요.',
+      '<b>오른쪽 위</b>: 이 건물의 사진 칸들이에요. 사진을 한 번 누르면 가운데 워드의 그 자리로 이동해요.',
+      '<b>오른쪽 아래 보관함</b>: 아직 칸에 안 넣은 사진이에요. 찍은 시간 순서예요.',
+      `다 확인했으면 ${B_('워드 만들기 →')}를 눌러요.`] },
+    { t: '사진 옮기기 (끌어다 놓기)', img: 'g3_drag', items: [
+      '사진을 <b>마우스로 꾹 누른 채</b> 원하는 칸으로 <b>끌어다 놓으면</b> 옮겨져요. 가운데 워드 칸에 바로 놓아도 돼요.',
+      '보관함 사진도 칸으로 끌어다 넣을 수 있어요. 칸에서 빼고 싶으면 보관함으로 끌어다 놓거나 <b>×</b>를 눌러요.',
+      ['tip', '칸 하나에는 최대 8장까지 넣을 수 있어요. 장수에 맞춰 크기가 저절로 맞춰져요.'] ] },
+    { t: '잘못 넣었을 때 고치기', img: 'g3_menu', items: [
+      `사진에 마우스를 올리면 나오는 ${B_('⇄ 옮기기')}를 눌러요. (사진에서 <b>오른쪽 클릭</b>해도 돼요)`,
+      '목록에서 <b>맞는 칸</b>을 누르면 바로 옮겨져요. 위 상자에서 <b>다른 건물</b>을 고를 수도 있어요.',
+      '<b>맨 앞 · 앞 · 뒤</b>로 칸 안 사진 순서도 바꿀 수 있어요.',
+      `방금 한 걸 취소하려면 위쪽 ${B_('↶ 되돌리기', 1)}를 눌러요. (키보드 <span class="kbd">Ctrl</span>+<span class="kbd">Z</span>) 다시 하려면 ${B_('↷ 다시', 1)}.`] },
+    { t: '위쪽 메뉴', img: 'g3_tools', items: [
+      '<b>칸당 최대</b>: 처음에 칸마다 몇 장씩 자동으로 넣을지 정해요. (1~8장)',
+      '<b>배치</b>: “칸 꽉 채우기”는 빈틈 없이 채워요(가장자리 조금 잘림). “사진 전체 보이기”는 안 잘리고 여백이 생겨요.',
+      '<b>기존 사진</b>: 워드에 원래 있던 사진을 두고 칸에 맞게 정리할지, 지우고 새로 넣을지 골라요.',
+      '<b>찾기</b>: 파일 이름 일부(예: 133959)를 쓰고 <span class="kbd">Enter</span> → 그 사진이 있는 곳으로 이동해요.'] } ] },
+  s4: { lab: 'Step 4 · 완성', slides: [
+    { t: '워드 내려받기', img: 'g4_done', items: [
+      '<b>초록색 글씨</b>가 보이면 검사를 통과한 거예요. (계통도·도형은 그대로, 사진 수도 정확)',
+      `${B_('워드 내려받기 ↓')}를 누르면 완성 파일이 저장돼요.`,
+      `고칠 게 있으면 ${B_('← 뒤로가기 (수정 가능)', 1)}를 눌러 고친 뒤 다시 워드 만들기를 눌러요.`,
+      ['tip', `다른 문서를 하려면 ${B_('새 작업', 1)}을 눌러요. (지금 작업은 지워져요)`] ] } ] },
+};
+const GIMG = n => `./guide2/${n}.jpg?v=20261122e`;
+function liHtml(x, i) { const tip = Array.isArray(x); return `<li class="${tip ? 'tip' : ''}"><span class="n">${tip ? '!' : i + 1}</span><span>${tip ? x[1] : x}</span></li>`; }
+let G = { key: null, i: 0 };
+function openGuide(key, i = 0) {
+  const g = GUIDE[key]; if (!g) return; G = { key, i };
+  const sl = g.slides[i];
+  $('gmLab').textContent = g.lab + (g.slides.length > 1 ? ` · ${i + 1}/${g.slides.length}` : '');
+  $('gmTitle').textContent = sl.t; $('gmImg').src = GIMG(sl.img);
+  let n = 0; $('gmList').innerHTML = sl.items.map(x => liHtml(x, Array.isArray(x) ? 0 : n++)).join('');
+  $('gmDots').innerHTML = g.slides.length > 1 ? g.slides.map((_, j) => `<i class="${j === i ? 'on' : ''}" data-j="${j}"></i>`).join('') : '';
+  $('gmDots').querySelectorAll('i').forEach(d => d.onclick = () => openGuide(key, +d.dataset.j));
+  $('gmPrev').style.visibility = i > 0 ? 'visible' : 'hidden';
+  $('gmNext').textContent = i < g.slides.length - 1 ? '다음 →' : '알겠어요 ✓';
+  $('gm').classList.remove('hidden');
+}
+$('gmPrev').onclick = () => openGuide(G.key, Math.max(0, G.i - 1));
+$('gmNext').onclick = () => { const g = GUIDE[G.key]; if (G.i < g.slides.length - 1) openGuide(G.key, G.i + 1); else $('gm').classList.add('hidden'); };
+$('gmClose').onclick = () => $('gm').classList.add('hidden');
+$('gm').onclick = e => { if (e.target === $('gm')) $('gm').classList.add('hidden'); };
+$('gmImg').onclick = () => window.open($('gmImg').src, '_blank');
+document.querySelectorAll('[data-guide]').forEach(b => b.onclick = () => openGuide(b.dataset.guide));
+$('drawerBody').innerHTML = Object.values(GUIDE).map(g => `<div class="lab" style="margin-top:22px">${g.lab}</div>` + g.slides.map(sl => {
+  let n = 0; return `<div class="gsec"><h3 style="margin:0 0 8px;font-size:16px">${sl.t}</h3><img src="${GIMG(sl.img)}" alt="" onclick="window.open(this.src,'_blank')"><ol>${sl.items.map(x => liHtml(x, Array.isArray(x) ? 0 : n++)).join('')}</ol></div>`; }).join('')).join('');
+// 확인 화면에 처음 들어오면 사용법을 한 번 자동으로 보여줌
+function maybeFirstGuide() { try { if (!localStorage.getItem('sl_g3_seen')) { localStorage.setItem('sl_g3_seen', '1'); setTimeout(() => openGuide('s3'), 600); } } catch (e) {} }
+
 $('helpBtn').onclick = () => $('drawer').classList.add('on');
 $('helpClose').onclick = () => $('drawer').classList.remove('on');
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLb(); $('drawer').classList.remove('on'); $('cf').classList.add('hidden'); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('gm').classList.add('hidden'); closeMenu(); closeLb(); $('drawer').classList.remove('on'); $('cf').classList.add('hidden'); } });
 window.addEventListener('beforeunload', e => { if (S.D) { e.preventDefault(); e.returnValue = ''; } });
-S._api = { autoAssign, renderAll, moveTo, toTray, locOf, goTo, trayOf, W, patchCell, isChanged, needsBuild };
+S._api = { undo, redo, openMenu, reorder, autoAssign, renderAll, moveTo, toTray, locOf, goTo, trayOf, W, patchCell, isChanged, needsBuild };
 </script>
 </body>
 </html>
