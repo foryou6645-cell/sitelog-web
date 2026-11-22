@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>정보통신설비 유지보수 관리 및 성능점검 계획 업로드 자동화</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="./jszip.min.js?v=20261122a"></script>
+<script src="./jszip.min.js?v=20261122b"></script>
+<script src="./docx-preview.min.js?v=20261122b"></script>
 <script>
 // 멈추면 이유를 화면에 보여줌
 window.addEventListener('error', e => { const el = document.getElementById('libinfo'); if (el) el.innerHTML = '<span class="err">페이지 오류: ' + (e.message || e) + ' — Ctrl+F5로 새로고침해 주세요</span>'; });
@@ -71,11 +72,31 @@ table.map tr.q select{border-color:#f0a35c}
 .tool .sel{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:6px}
 .tool select,.tool input{padding:7px 10px;border-radius:10px;border:1.5px solid #c8d3df;font-size:13px;background:#fff}
 .tool .sp{flex:1}
-.three{display:grid;grid-template-columns:270px minmax(0,1fr) 320px;height:calc(100vh - 122px)}
+.three{display:grid;grid-template-columns:200px minmax(0,1fr) 560px;grid-template-rows:minmax(0,1fr);height:calc(100vh - 122px)}
+.wordcol{display:flex;flex-direction:column;background:#8b929c;min-width:0;min-height:0;overflow:hidden}
+.wbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);font-size:13px}
+.wbar .wst{color:var(--teal);font-weight:700}
+.wbar .zb{padding:4px 11px;border-radius:99px;border:1.5px solid #c8d3df;background:#fff;cursor:pointer;font-weight:700}
+.wordpane{flex:1;min-height:0;overflow:auto;position:relative;cursor:grab;overscroll-behavior:contain}
+.wordpane.panning{cursor:grabbing;user-select:none}
+.wordpane .docx-wrapper{background:transparent!important;padding:14px 0!important}
+.wordpane .docx-wrapper>section.docx{box-shadow:0 2px 10px rgba(0,0,0,.35);margin-bottom:14px!important}
+.wordpane .wload{color:#fff;text-align:center;padding:80px 20px;font-size:15px}
+.wgrid{display:flex;flex-direction:column;justify-content:center;width:100%}
+.wrow{display:flex;justify-content:center;align-items:center}
+.wph{position:relative;margin:0 2pt;cursor:grab;flex:none}
+.wph img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none}
+.wph.flash{outline:5px solid #ff8a1f;outline-offset:1px}
+td.wdrop{transition:background .12s}
+td.wdrop.over{background:#e9faf6!important;box-shadow:inset 0 0 0 4px var(--mint)}
+td.wdrop .wempty{color:#9aa6b6;font-size:11pt;text-align:center}
+.right{display:flex;flex-direction:column;padding:0!important;min-height:0;overflow:hidden!important}
+#rboard{flex:1;min-height:0;overflow:auto;padding:14px 16px}
+#rtray{height:36%;overflow:auto;border-top:2px solid var(--line);padding:12px 16px;background:#fff}
 .col{overflow:auto}
 .left{background:var(--soft);border-right:1px solid var(--line);padding:14px}
 .right{background:var(--soft);border-left:1px solid var(--line);padding:14px}
-.center{padding:18px 22px}
+.center{padding:0}
 .bl{border-radius:12px;padding:9px 12px;margin-bottom:6px;background:#fff;cursor:pointer;border:1.5px solid transparent;transition:.12s}
 .bl:hover{border-color:#bfe9df}
 .bl.on{background:var(--navy);color:#fff}
@@ -83,8 +104,9 @@ table.map tr.q select{border-color:#f0a35c}
 .bl .st{font-size:12px;opacity:.75;margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .bl.on .tag{opacity:1}
 .bhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-.bhead h2{font-size:22px;margin:3px 0 0;font-weight:800}
-.cells{display:flex;flex-wrap:wrap;gap:22px}
+.bhead h2{font-size:18px;margin:3px 0 0;font-weight:800}
+.cell .ct{cursor:pointer}
+.cells{display:flex;flex-wrap:wrap;gap:16px}
 .cell{width:var(--cw)}
 .cell .ct{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:6px}
 .cell .ct .cnt{margin-left:auto}
@@ -198,8 +220,10 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
   </div>
   <div class="three">
     <div class="col left"><div class="lab" style="margin:2px 0 10px" id="bCount">Buildings</div><div id="blist"></div></div>
-    <div class="col center" id="center"></div>
-    <div class="col right" id="right"></div>
+    <div class="wordcol"><div class="wbar"><b id="wTitle">워드 미리보기</b><span class="wst" id="wSt"></span><span style="flex:1"></span>
+      <button class="zb" id="zOut">−</button><span id="zTxt" style="min-width:44px;text-align:center">맞춤</span><button class="zb" id="zIn">+</button><button class="zb" id="zFit">맞춤</button></div>
+      <div class="wordpane" id="wpane"><div id="wview"></div></div></div>
+    <div class="col right" id="right"><div id="rboard"></div><div id="rtray"></div></div>
   </div>
 </main>
 
@@ -237,7 +261,7 @@ details.fold summary{cursor:pointer;font-size:13px;font-weight:700}
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { loadModel, loadExtraRefs, readDoc, analyzeOlds, preparePhoto, finishPhoto, shotTime, autoMap, bestGrid, dot, buildDocx, photoJpeg, oldJpeg } from './engine2.js?v=20261122a';
+import { loadModel, loadExtraRefs, readDoc, analyzeOlds, preparePhoto, finishPhoto, shotTime, autoMap, bestGrid, dot, buildDocx, photoJpeg, oldJpeg, miniDocx, decodeTo } from './engine2.js?v=20261122b';
 
 const $ = id => document.getElementById(id);
 const MAXCELL = 8;
@@ -435,23 +459,26 @@ function autoAssign(bkey) {
 
 // ---------------------------------------------------------------- 3. 화면 그리기
 const item = k => k[0] === 'n' ? S.P[k] : S.O[k];
+function bOf(key) { return S.D.buildings.find(b => b.key === key); }
+function isChanged(ci) { const a = S.cellItems[ci], o = S.D.cells[ci].olds; return !(a.length === o.length && a.every((k, i) => k === o[i])); }
 function bStats(b) {
   let n = 0, o = 0, empty = 0;
   for (const ci of b.cells) { const a = S.cellItems[ci]; if (!a.length) empty++; for (const k of a) k[0] === 'n' ? n++ : o++; }
-  const tray = trayOf(b.key).length;
-  return { n, o, empty, tray };
+  return { n, o, empty, tray: trayOf(b.key).length };
 }
 function trayOf(bkey) {
-  const placed = placedSet(); const b = S.D.buildings.find(x => x.key === bkey);
+  const placed = placedSet(); const b = bOf(bkey);
   const news = S.photos.filter(p => S.map[p.folder] === bkey && !placed.has(p.id)).sort((a, c) => a.t - c.t);
   const olds = S.D.olds.filter(o => !o.bad && b.cells.includes(o.cell) && !placed.has(o.id));
   return olds.map(o => o.id).concat(news.map(p => p.id));
 }
-function renderAll() { renderList(); renderCenter(); renderRight(); renderSum(); }
+function renderAll() { renderList(); renderBoard(); renderRight(); renderSum(); showWord(S.curB); }
 function renderSum() {
   let n = 0, empty = 0; S.cellItems.forEach(a => { if (!a.length) empty++; n += a.filter(k => k[0] === 'n').length; });
-  const un = S.photos.filter(p => !S.map[p.folder]).length;
-  $('sumTxt').innerHTML = `새 사진 ${n}장 배치 · 빈 칸 <b style="color:${empty ? 'var(--red2)' : 'inherit'}">${empty}</b>/${S.cellItems.length}${un ? ` · 건물 미지정 ${un}장` : ''}`;
+  const placed = placedSet();
+  const un = S.photos.filter(p => !S.map[p.folder] && !placed.has(p.id)).length;
+  const tray = S.photos.filter(p => S.map[p.folder] && !placed.has(p.id)).length;
+  $('sumTxt').innerHTML = `사진 ${S.photos.length}장 중 <b>${n}장 배치</b> · 보관함 ${tray}장${un ? ` · 건물 미지정 ${un}장` : ''} · 빈 칸 <b style="color:${empty ? 'var(--red2)' : 'inherit'}">${empty}</b>/${S.cellItems.length}`;
 }
 function renderList() {
   $('bCount').textContent = `Buildings ${S.D.buildings.length}`;
@@ -460,11 +487,11 @@ function renderList() {
     const folders = Object.keys(S.map).filter(f => S.map[f] === b.key);
     const tags = [];
     if (st.empty) tags.push(`<span class="tag t-x">빈 칸 ${st.empty}</span>`);
-    if (!folders.length && !st.o) tags.push('<span class="tag t-q">사진 폴더 없음</span>');
+    if (!folders.length && !st.o) tags.push('<span class="tag t-q">폴더 없음</span>');
     return `<div class="bl ${b.key === S.curB ? 'on' : ''}" data-b="${esc(b.key)}"><div class="nm">1.${b.n} ${esc(b.name)}</div>
       <div class="st">칸 ${b.cells.length} · ${st.o ? '기존 ' + st.o + ' · ' : ''}새 ${st.n}${st.tray ? ' · 보관 ' + st.tray : ''} ${tags.join('')}</div></div>`;
   }).join('');
-  for (const el of $('blist').querySelectorAll('.bl')) el.onclick = () => { S.curB = el.dataset.b; renderAll(); $('center').scrollTop = 0; };
+  for (const el of $('blist').querySelectorAll('.bl')) el.onclick = () => { if (S.curB === el.dataset.b) return; S.curB = el.dataset.b; renderAll(); $('rboard').scrollTop = 0; };
 }
 let CW = 250;
 function cellHtml(ci) {
@@ -484,21 +511,21 @@ function cellHtml(ci) {
     }
   } else inner = '<div class="hint">사진을 여기로<br>끌어다 놓으세요</div>';
   const cnt = arr.length ? `<span class="tag ${arr.length > S.cap ? 't-q' : 't-ok'} cnt">${arr.length}장</span>` : '<span class="tag t-x cnt">빈 칸</span>';
-  return `<div class="cell" style="--cw:${CW}px"><div class="ct">${esc(c.f)}${c.locked ? ' <span class="tag t-g">🔒 그대로 둠</span>' : ''}${cnt}</div>
+  return `<div class="cell" style="--cw:${CW}px"><div class="ct" data-ci="${ci}" title="누르면 왼쪽 워드의 이 칸으로 이동">${esc(c.f)}${c.locked ? ' <span class="tag t-g">🔒 그대로 둠</span>' : ''}${cnt}</div>
     <div class="box ${arr.length ? '' : 'empty'} ${c.locked ? 'locked' : ''} ${arr.length >= MAXCELL ? 'full' : ''}" data-ci="${ci}" style="height:${H}px">${inner}</div></div>`;
 }
-function renderCenter() {
-  const b = S.D.buildings.find(b => b.key === S.curB); if (!b) { $('center').innerHTML = ''; return; }
-  const cwAvail = $('center').clientWidth - 48, ncol = cwAvail > 1180 ? 4 : 3;
-  CW = Math.max(210, Math.min(330, Math.floor((cwAvail - 22 * (ncol - 1)) / ncol)));
+function renderBoard() {
+  const b = bOf(S.curB); if (!b) { $('rboard').innerHTML = ''; return; }
+  const avail = $('rboard').clientWidth - 32;
+  CW = Math.max(170, Math.floor((avail - 16) / 2));
   const folders = Object.keys(S.map).filter(f => S.map[f] === b.key);
   const st = bStats(b);
-  $('center').innerHTML = `<div class="bhead"><div><div class="lab">1.${b.n} · ${folders.length ? '폴더 ' + folders.map(esc).join(', ') : '연결된 사진 폴더 없음'}</div>
-    <h2>${esc(b.name)} — 현황사진 ${b.cells.length}칸${st.n ? ' · 새 사진 ' + st.n + '장' : ''}</h2></div>
-    <div style="display:flex;gap:8px"><button class="pill o sm" id="reAuto" ${folders.length ? '' : 'disabled'}>이 건물 자동 배치 다시</button></div></div>
+  $('rboard').innerHTML = `<div class="bhead"><div><div class="lab">1.${b.n} · ${folders.length ? '폴더 ' + folders.map(esc).join(', ') : '연결된 사진 폴더 없음'}</div>
+    <h2>${esc(b.name)} — ${b.cells.length}칸${st.n ? ' · 새 사진 ' + st.n + '장' : ''}</h2></div>
+    <button class="pill o sm" id="reAuto" ${folders.length ? '' : 'disabled'}>자동 배치 다시</button></div>
     <div class="cells">${b.cells.map(cellHtml).join('')}</div>`;
-  if ($('reAuto')) $('reAuto').onclick = () => { autoAssign(b.key); S.touched.delete(b.key); renderAll(); toast('이 건물을 자동 배치로 되돌렸습니다'); };
-  wireCenter();
+  $('reAuto').onclick = () => { autoAssign(b.key); S.touched.delete(b.key); rerenderSoft(b.cells); toast('이 건물을 자동 배치로 되돌렸습니다'); };
+  wireBoard();
 }
 function thHtml(k) {
   const it = item(k); const isOld = k[0] === 'o';
@@ -506,18 +533,119 @@ function thHtml(k) {
   return `<div class="th" draggable="true" data-k="${k}" title="${esc(isOld ? '기존 사진' : it.folder + '/' + it.name)}"><img src="${it.thumb || ''}" alt="">${badge}${isOld ? '' : `<span class="tm">${fmtT(it.t)}</span>`}</div>`;
 }
 function renderRight() {
-  const b = S.D.buildings.find(b => b.key === S.curB); if (!b) return;
+  const b = bOf(S.curB); if (!b) return;
   const tray = trayOf(b.key);
   const un = {}; const placed = placedSet();
   for (const p of S.photos) if (!S.map[p.folder] && !placed.has(p.id)) (un[p.folder] = un[p.folder] || []).push(p.id);
   const others = Object.entries(un).sort();
-  $('right').innerHTML = `<div class="lab">Tray · 보관함</div><div class="h3">이 건물 보관함 ${tray.length}장</div>
+  $('rtray').innerHTML = `<div class="lab">Tray · 보관함</div><div class="h3">이 건물 보관함 ${tray.length}장 <span class="muted" style="font-weight:500">— 칸에 안 넣은 사진 (찍은 시간 순)</span></div>
     <div class="tray" id="trayB">${tray.map(thHtml).join('') || '<div class="muted" style="padding:8px">비어 있음 — 칸에서 뺀 사진은 여기로 옵니다</div>'}</div>
-    ${others.length ? `<div class="lab" style="margin-top:18px">Unassigned</div><div class="h3">건물 미지정 사진 ${others.reduce((s, [, v]) => s + v.length, 0)}장</div>
-      <div class="muted" style="margin-bottom:8px">폴더→건물에서 "넣지 않음"으로 둔 폴더입니다. 필요한 사진만 끌어다 칸에 넣으세요.</div>
+    ${others.length ? `<div class="lab" style="margin-top:16px">Unassigned</div><div class="h3">건물 미지정 사진 ${others.reduce((s, [, v]) => s + v.length, 0)}장</div>
       ${others.map(([f, ks]) => `<details class="fold"><summary>${esc(f)} · ${ks.length}장</summary><div class="tray" style="margin-top:8px">${ks.sort((a, c) => S.P[a].t - S.P[c].t).map(thHtml).join('')}</div></details>`).join('')}` : ''}`;
   wireRight();
 }
+
+// ---------------------------------------------------------------- 워드 미리보기 (건물 단위, 한 번 그리고 바뀐 칸만 바로 고침)
+const W = { cache: new Map(), order: [], zoom: 'fit', busy: null };
+function wordOpts() { return { className: 'docx', inWrapper: true, ignoreWidth: false, ignoreHeight: false, ignoreFonts: false, breakPages: true, ignoreLastRenderedPageBreak: true, experimental: false, trimXmlDeclaration: true, useBase64URL: false, renderHeaders: true, renderFooters: true, renderFootnotes: false, renderEndnotes: false }; }
+async function renderWord(b) {
+  const blob = await miniDocx(S.D, b);
+  const div = document.createElement('div');
+  await docx.renderAsync(blob, div, null, wordOpts());
+  const tables = Array.from(div.querySelectorAll('table')).filter(t => t.rows[0] && t.rows[0].cells.length >= 2 && t.rows[0].cells[0].textContent.replace(/\s/g, '') === '현황사진');
+  const ent = { div, tds: {}, orig: {}, ok: tables.length === b.cells.length };
+  if (ent.ok) b.cells.forEach((ci, i) => { const td = tables[i].rows[0].cells[1]; ent.tds[ci] = td; ent.orig[ci] = td.innerHTML; wireTd(td, ci); });
+  return ent;
+}
+async function showWord(bkey) {
+  const b = bOf(bkey); if (!b) return;
+  $('wTitle').textContent = `워드 미리보기 · 1.${b.n} ${b.name}`;
+  let ent = W.cache.get(bkey);
+  if (!ent) {
+    $('wSt').textContent = '그리는 중…'; $('wview').innerHTML = '<div class="wload">워드 화면을 그리는 중입니다…<br><span style="font-size:13px;opacity:.8">사진 작업은 오른쪽에서 계속하셔도 됩니다</span></div>';
+    const t0 = performance.now();
+    if (!W.busy || W.busy.key !== bkey) W.busy = { key: bkey, p: renderWord(b) };
+    try { ent = await W.busy.p; } catch (e) { console.error(e); $('wSt').textContent = ''; $('wview').innerHTML = `<div class="wload">워드 화면을 그리지 못했습니다: ${esc(e.message || e)}<br>사진 배치와 워드 만들기는 정상 동작합니다.</div>`; W.busy = null; return; }
+    W.busy = null; ent.ms = performance.now() - t0;
+    W.cache.set(bkey, ent); W.order.push(bkey);
+    while (W.order.length > 8) { const old = W.order.shift(); if (old !== S.curB) W.cache.delete(old); }
+  }
+  if (S.curB !== bkey) return;
+  for (const ci of b.cells) patchCell(ci);
+  if ($('wview').firstChild !== ent.div) { $('wview').innerHTML = ''; $('wview').appendChild(ent.div); }
+  $('wSt').textContent = ent.ok ? `✓ 현황사진 ${b.cells.length}칸 실시간 반영` : '⚠ 칸 위치를 맞추지 못함 (워드 만들기는 정상)';
+  applyZoom();
+  if (W.pendingGo) { const k = W.pendingGo; W.pendingGo = null; wordFocus(k); }
+}
+function hiUrl(k) {           // 워드 화면용 선명한 사진 (필요할 때만 만들기)
+  const it = item(k); if (it.hi) return it.hi;
+  if (k[0] === 'o') { it.hi = URL.createObjectURL(it.full); return it.hi; }
+  if (!it.hiP) it.hiP = (async () => {
+    const L = 700, sc = Math.min(1, L / Math.max(it.w, it.h));
+    const bmp = await decodeTo(it.file, it.info, Math.round(it.w * sc), Math.round(it.h * sc));
+    const c = new OffscreenCanvas(bmp.width, bmp.height); c.getContext('2d').drawImage(bmp, 0, 0); bmp.close();
+    it.hi = URL.createObjectURL(await c.convertToBlob({ type: 'image/jpeg', quality: 0.85 }));
+    for (const im of document.querySelectorAll(`#wview img[data-hk="${k}"]`)) im.src = it.hi;
+  })().catch(() => {});
+  return null;
+}
+function patchCell(ci) {
+  const c = S.D.cells[ci]; const ent = W.cache.get(c.bkey); if (!ent || !ent.ok) return;
+  const td = ent.tds[ci]; if (!td) return;
+  if (!isChanged(ci)) { if (td._st !== 'orig') { td.innerHTML = ent.orig[ci]; td._st = 'orig'; } td.querySelectorAll('img').forEach((im, i) => { const k = c.olds[i]; if (k) { im.dataset.k = k; im.draggable = !c.locked; im.style.cursor = 'grab'; } }); return; }
+  const arr = S.cellItems[ci];
+  if (!arr.length) { td.innerHTML = '<div class="wempty">사진 없음 — 여기로 끌어다 놓으세요</div>'; td._st = 'new'; return; }
+  const g = bestGrid(arr.map(k => item(k).aspect), c.box.W, c.box.H, 100);
+  let k = 0, html = '<div class="wgrid">';
+  for (let r = 0; r < g.rows; r++) {
+    const inrow = Math.min(g.cols, arr.length - k); let rh = 0;
+    for (let j = 0; j < inrow; j++) rh = Math.max(rh, g.sizes[k + j][1]);
+    html += `<div class="wrow" style="height:${((rh + 110) / 20).toFixed(1)}pt">`;
+    for (let j = 0; j < inrow; j++) {
+      const key = arr[k], [w, h] = g.sizes[k]; const src = hiUrl(key) || item(key).thumb;
+      html += `<div class="wph" data-k="${key}" draggable="true" style="width:${(w / 20).toFixed(1)}pt;height:${(h / 20).toFixed(1)}pt"><img data-hk="${key}" src="${src}" alt=""></div>`;
+      k++;
+    }
+    html += '</div>';
+  }
+  td.innerHTML = html + '</div>'; td._st = 'new';
+}
+function wireTd(td, ci) {
+  td.classList.add('wdrop'); td.dataset.ci = ci;
+  td.addEventListener('dragover', e => { if (!dragKey) return; e.preventDefault(); td.classList.add('over'); });
+  td.addEventListener('dragleave', () => td.classList.remove('over'));
+  td.addEventListener('drop', e => { e.preventDefault(); td.classList.remove('over'); const k = dragKey || e.dataTransfer.getData('text/plain'); if (!k) return;
+    const ph = e.target.closest('[data-k]'); moveTo(k, ci, ph && ph.dataset.k !== k && S.cellItems[ci].includes(ph.dataset.k) ? ph.dataset.k : null); });
+  td.addEventListener('dragstart', e => { const el = e.target.closest('[data-k]'); if (!el) return; dragKey = el.dataset.k; e.dataTransfer.setData('text/plain', dragKey); e.dataTransfer.effectAllowed = 'move'; });
+  td.addEventListener('dragend', () => { dragKey = null; });
+  td.addEventListener('click', e => { const el = e.target.closest('[data-k]'); if (!el) return; e.stopPropagation(); boardFocus(el.dataset.k); flashEl(el); });
+  td.addEventListener('dblclick', e => { const el = e.target.closest('[data-k]'); if (el) openLb(el.dataset.k); });
+}
+function flashEl(el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
+function wordFocus(k) {            // 워드 화면에서 그 사진(칸)으로 이동
+  const ci = locOf(k); if (ci < 0) return;
+  const c = S.D.cells[ci]; const ent = W.cache.get(c.bkey);
+  if (!ent || c.bkey !== S.curB || $('wview').firstChild !== ent.div) { W.pendingGo = k; return; }
+  const el = ent.div.querySelector(`[data-k="${k}"]`) || ent.tds[ci];
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); flashEl(el); }
+}
+function wordCell(ci) { const c = S.D.cells[ci]; const ent = W.cache.get(c.bkey); if (ent && ent.tds[ci]) { ent.tds[ci].scrollIntoView({ behavior: 'smooth', block: 'center' }); ent.tds[ci].classList.add('over'); setTimeout(() => ent.tds[ci].classList.remove('over'), 1200); } }
+function boardFocus(k) { const el = document.querySelector(`#rboard [data-k="${k}"]`) || document.querySelector(`#rtray [data-k="${k}"]`); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); flashEl(el); } }
+function applyZoom() {
+  const sec = $('wview').querySelector('section.docx'); if (!sec) return;
+  let z = W.zoom;
+  if (z === 'fit') z = Math.min(1.0, ($('wpane').clientWidth - 30) / sec.offsetWidth);
+  $('wview').style.zoom = z; $('zTxt').textContent = Math.round(z * 100) + '%'; W.z = z;
+}
+$('zIn').onclick = () => { W.zoom = Math.min(2, (W.z || 1) + 0.1); applyZoom(); };
+$('zOut').onclick = () => { W.zoom = Math.max(0.3, (W.z || 1) - 0.1); applyZoom(); };
+$('zFit').onclick = () => { W.zoom = 'fit'; applyZoom(); };
+(() => {   // 워드 화면 빈 곳을 끌어서 이동
+  const p = $('wpane'); let st = null;
+  p.addEventListener('mousedown', e => { if (e.button !== 0 || e.target.closest('[data-k]')) return; st = { x: e.clientX, y: e.clientY, l: p.scrollLeft, t: p.scrollTop }; p.classList.add('panning'); });
+  window.addEventListener('mousemove', e => { if (!st) return; p.scrollLeft = st.l - (e.clientX - st.x); p.scrollTop = st.t - (e.clientY - st.y); });
+  window.addEventListener('mouseup', () => { st = null; p.classList.remove('panning'); });
+})();
 
 // ---------------------------------------------------------------- 끌어서 옮기기
 let dragKey = null;
@@ -536,38 +664,43 @@ function moveTo(k, ci, beforeKey) {
   removeKey(k);
   let i = beforeKey ? arr.indexOf(beforeKey) : -1; if (i < 0) i = arr.length;
   arr.splice(i, 0, k);
-  S.touched.add(S.D.cells[ci].bkey); if (from >= 0) S.touched.add(S.D.cells[from].bkey);
-  rerenderSoft(); flash(k);
+  S.touched.add(c.bkey); if (from >= 0) S.touched.add(S.D.cells[from].bkey);
+  rerenderSoft([ci, from]); flash(k);
 }
 function toTray(k) {
   const from = locOf(k); if (from < 0) return;
   if (S.D.cells[from].locked) { toast('그대로 두는 칸의 사진은 옮길 수 없습니다'); return; }
-  removeKey(k); S.touched.add(S.D.cells[from].bkey); rerenderSoft();
+  removeKey(k); S.touched.add(S.D.cells[from].bkey); rerenderSoft([from]);
 }
-function rerenderSoft() { const st = $('center').scrollTop, rt = $('right').scrollTop; const open = [...document.querySelectorAll('#right details[open] summary')].map(s => s.textContent.split(' · ')[0]);
-  renderList(); renderCenter(); renderRight(); renderSum(); $('center').scrollTop = st; $('right').scrollTop = rt;
-  for (const d of document.querySelectorAll('#right details')) if (open.includes(d.querySelector('summary').textContent.split(' · ')[0])) d.open = true; }
-function flash(k) { requestAnimationFrame(() => { const el = document.querySelector(`[data-k="${k}"]`); if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2800); } }); }
-function wireCenter() {
-  for (const box of $('center').querySelectorAll('.box')) {
+function rerenderSoft(cells) {
+  const st = $('rboard').scrollTop, rt = $('rtray').scrollTop; const open = [...document.querySelectorAll('#rtray details[open] summary')].map(s => s.textContent.split(' · ')[0]);
+  renderList(); renderBoard(); renderRight(); renderSum(); $('rboard').scrollTop = st; $('rtray').scrollTop = rt;
+  for (const d of document.querySelectorAll('#rtray details')) if (open.includes(d.querySelector('summary').textContent.split(' · ')[0])) d.open = true;
+  for (const ci of (cells || [])) if (ci >= 0) patchCell(ci);
+}
+function flash(k) { requestAnimationFrame(() => { for (const el of document.querySelectorAll(`[data-k="${k}"]`)) flashEl(el); }); }
+function wireBoard() {
+  for (const box of $('rboard').querySelectorAll('.box')) {
     const ci = +box.dataset.ci;
     box.addEventListener('dragover', e => { if (!dragKey) return; e.preventDefault(); box.classList.add('over'); });
     box.addEventListener('dragleave', () => box.classList.remove('over'));
     box.addEventListener('drop', e => { e.preventDefault(); box.classList.remove('over'); const k = dragKey || e.dataTransfer.getData('text/plain'); if (!k) return;
       const ph = e.target.closest('.ph'); moveTo(k, ci, ph && ph.dataset.k !== k ? ph.dataset.k : null); });
   }
-  for (const ph of $('center').querySelectorAll('.ph')) {
+  for (const ct of $('rboard').querySelectorAll('.ct')) ct.addEventListener('click', () => wordCell(+ct.dataset.ci));
+  for (const ph of $('rboard').querySelectorAll('.ph')) {
     if (ph.getAttribute('draggable') === 'true') startDrag(ph);
-    ph.addEventListener('click', e => { if (e.target.classList.contains('x')) { toTray(ph.dataset.k); return; } openLb(ph.dataset.k); });
+    ph.addEventListener('click', e => { if (e.target.classList.contains('x')) { toTray(ph.dataset.k); return; } flashEl(ph); wordFocus(ph.dataset.k); });
+    ph.addEventListener('dblclick', () => openLb(ph.dataset.k));
   }
 }
 function wireRight() {
-  for (const t of $('right').querySelectorAll('.tray')) {
+  for (const t of $('rtray').querySelectorAll('.tray')) {
     t.addEventListener('dragover', e => { if (!dragKey || locOf(dragKey) < 0) return; e.preventDefault(); t.classList.add('over'); });
     t.addEventListener('dragleave', () => t.classList.remove('over'));
     t.addEventListener('drop', e => { e.preventDefault(); t.classList.remove('over'); const k = dragKey || e.dataTransfer.getData('text/plain'); if (k) toTray(k); });
   }
-  for (const th of $('right').querySelectorAll('.th')) { startDrag(th); th.addEventListener('click', () => openLb(th.dataset.k)); }
+  for (const th of $('rtray').querySelectorAll('.th')) { startDrag(th); th.addEventListener('click', () => openLb(th.dataset.k)); }
 }
 
 // ---------------------------------------------------------------- 크게 보기 · 찾기
@@ -589,7 +722,7 @@ function openLb(k) {
     ${it.dup ? '<div class="tag t-q">이미 워드에 있는 사진과 같아 보임</div>' : ''}
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto">
       ${ci >= 0 && !S.D.cells[ci].locked ? '<button class="pill o sm" id="lbTray">보관함으로 빼기</button>' : ''}
-      ${ci >= 0 ? '<button class="pill o sm" id="lbGo">이 칸으로 이동</button>' : ''}
+      ${ci >= 0 ? '<button class="pill o sm" id="lbGo">워드에서 이 위치 보기</button>' : ''}
       <button class="pill p sm" id="lbClose">닫기</button></div>`;
   $('lbox').classList.remove('hidden');
   $('lbClose').onclick = closeLb;
@@ -603,8 +736,9 @@ function goTo(k) {
   const bkey = ci >= 0 ? S.D.cells[ci].bkey : (k[0] === 'n' ? S.map[S.P[k].folder] : null);
   if (bkey && bkey !== S.curB) { S.curB = bkey; renderAll(); }
   requestAnimationFrame(() => {
-    let el = document.querySelector(`#center [data-k="${k}"]`) || document.querySelector(`#right [data-k="${k}"]`);
-    if (el) { const d = el.closest('details'); if (d) d.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2800); }
+    const el = document.querySelector(`#rboard [data-k="${k}"]`) || document.querySelector(`#rtray [data-k="${k}"]`);
+    if (el) { const d = el.closest('details'); if (d) d.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); flashEl(el); }
+    if (ci >= 0) wordFocus(k);
   });
 }
 $('find').addEventListener('keydown', e => {
@@ -661,7 +795,7 @@ $('build').onclick = async () => {
   } finally { ov.remove(); btn.disabled = false; }
 };
 $('goBack').onclick = () => { show('s3'); renderAll(); };
-window.addEventListener('resize', () => { if (!$('s3').classList.contains('hidden')) { clearTimeout(S._rz); S._rz = setTimeout(rerenderSoft, 150); } });
+window.addEventListener('resize', () => { if (!$('s3').classList.contains('hidden')) { clearTimeout(S._rz); S._rz = setTimeout(() => { rerenderSoft(); if (W.zoom === 'fit') applyZoom(); }, 150); } });
 
 // ---------------------------------------------------------------- 초기화 · 사용법
 function askReset() { $('cf').classList.remove('hidden'); }
@@ -673,6 +807,7 @@ $('cfYes').onclick = () => {
   if (S.D) for (const o of S.D.olds) if (o.thumb) URL.revokeObjectURL(o.thumb);
   if (S.dlUrl) URL.revokeObjectURL(S.dlUrl);
   Object.assign(S, { docFile: null, photoFiles: [], D: null, photos: [], P: {}, O: {}, map: {}, auto: {}, cellItems: [], curB: null, touched: new Set(), dlUrl: null });
+  W.cache.clear(); W.order = []; $('wview').innerHTML = '';
   mapSnapshot = null; $('cap').value = '4'; S.cap = 4; $('policy').value = 'keep'; S.policy = 'keep';
   prog(0, ''); upd(); show('s1');
 };
@@ -680,7 +815,7 @@ $('helpBtn').onclick = () => $('drawer').classList.add('on');
 $('helpClose').onclick = () => $('drawer').classList.remove('on');
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLb(); $('drawer').classList.remove('on'); $('cf').classList.add('hidden'); } });
 window.addEventListener('beforeunload', e => { if (S.D) { e.preventDefault(); e.returnValue = ''; } });
-S._api = { autoAssign, renderAll, moveTo, toTray, locOf, goTo, trayOf };
+S._api = { autoAssign, renderAll, moveTo, toTray, locOf, goTo, trayOf, W, patchCell, isChanged };
 </script>
 </body>
 </html>

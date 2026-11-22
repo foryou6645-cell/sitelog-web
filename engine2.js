@@ -205,7 +205,7 @@ function findCells(doc) {
     if (el.localName === 'p') {
       const t = el.textContent.trim();
       const m = t.match(/^1\.(\d+)\s+(.+)$/);
-      if (m) { bld = { n: +m[1], name: m[2].trim() }; fac = null; continue; }
+      if (m) { bld = { n: +m[1], name: m[2].trim(), el }; fac = null; continue; }
       if (bld && t.replace(/\s/g, '').includes('성능점검표')) fac = t.replace(/\s/g, '').replace('성능점검표', '');
     } else if (el.localName === 'tbl' && bld) {
       const tr = kids(el, 'tr')[0]; if (!tr) continue;
@@ -269,7 +269,19 @@ export async function readDoc(file, onStep) {
     bmap.get(key).cells.push(i); cells.push(cell);
   }
   const anchors = doc.getElementsByTagNameNS(NS.wp, 'anchor').length;
-  return { zip, doc, xmlLen: xmlStr.length, cells, buildings, olds, anchors, fileName: file.name };
+  // 건물별 본문 범위 (워드 미리보기를 건물 단위로 빠르게 그리기 위해)
+  const body = doc.getElementsByTagNameNS(NS.w, 'body')[0];
+  const bodyKids = Array.from(body.children);
+  const pos = new Map(bodyKids.map((el, i) => [el, i]));
+  const heads = found.reduce((m, c) => { const k = c.b.n + '|' + c.b.name; if (!m.has(k)) m.set(k, c.b.el); return m; }, new Map());
+  const last = bodyKids[bodyKids.length - 1];
+  const endAll = last && last.localName === 'sectPr' ? bodyKids.length - 1 : bodyKids.length;
+  buildings.forEach((b, i) => { b.start = pos.get(heads.get(b.key)); });
+  buildings.forEach((b, i) => { b.end = i + 1 < buildings.length ? buildings[i + 1].start : endAll; });
+  const mb = xmlStr.match(/<w:body[^>]*>/);
+  const xmlHead = xmlStr.slice(0, mb.index + mb[0].length);
+  const sectPrXml = last && last.localName === 'sectPr' ? new XMLSerializer().serializeToString(last) : '';
+  return { zip, doc, bodyKids, xmlHead, sectPrXml, rels, xmlLen: xmlStr.length, cells, buildings, olds, anchors, fileName: file.name };
 }
 
 // 기존 사진들: 썸네일·특징값(설비 종류 학습용)
@@ -292,6 +304,27 @@ export async function analyzeOlds(D, onEach) {
     }
     onEach && onEach(o);
   }
+}
+
+// ------------------------------------------------------------ 건물 하나만 담은 작은 워드 (미리보기용, 원본은 그대로)
+export async function miniDocx(D, b) {
+  const xs = new XMLSerializer();
+  let body = '';
+  for (let i = b.start; i < b.end; i++) body += xs.serializeToString(D.bodyKids[i]);
+  const xml = D.xmlHead + body + D.sectPrXml + '</w:body></w:document>';
+  const used = new Set(); for (const m of xml.matchAll(/r:(?:embed|id|link|pict)="([^"]+)"/g)) used.add(m[1]);
+  const mini = new JSZip();
+  for (const n of Object.keys(D.zip.files)) {
+    const f = D.zip.files[n]; if (f.dir || n === 'word/document.xml' || /^word\/(media|embeddings)\//.test(n)) continue;
+    mini.file(n, await f.async('uint8array'), { createFolders: false });
+  }
+  for (const id of used) {
+    const t = D.rels[id]; if (!t || /^https?:/.test(t)) continue;
+    const p = 'word/' + t.replace(/^\/?word\//, '');
+    const f = D.zip.file(p); if (f) mini.file(p, await f.async('uint8array'), { createFolders: false });
+  }
+  mini.file('word/document.xml', xml, { createFolders: false });
+  return await mini.generateAsync({ type: 'blob', compression: 'STORE' });
 }
 
 // ------------------------------------------------------------ 워드 만들기
@@ -347,10 +380,26 @@ export async function buildDocx(D, plan, getSource, onProgress) {
   const outName = D.fileName.replace(/\.docx$/i, '') + '_사진완성.docx';
   const newMedia = [];
   try {
+    // (1) 칸마다 배열 계산 → (2) 사진을 그 크기로 동시에 여러 장 압축 → (3) 워드에 넣기
+    const jobs = [], built = [];
     for (const p of plan) {
-      const tc = cellsNow[p.cell].tc;
       const items = p.items.map(it => ({ ...it, rid: newRid(), docPrId: docPrId++ }));
       const { xml } = cellXml(items, D.cells[p.cell].box);
+      built.push({ p, items, xml });
+      for (const it of items) jobs.push(it);
+    }
+    let next = 0;
+    const worker = async () => {
+      while (next < jobs.length) {
+        const it = jobs[next++];
+        const px = [Math.max(16, Math.round(it.tw / 1440 * DPI)), Math.max(16, Math.round(it.th / 1440 * DPI))];
+        it.blob = await getSource(it.key, px[0], px[1]);
+        done++; onProgress && onProgress(done, total, '사진 크기 맞춰 줄이는 중');
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    for (const { p, items, xml } of built) {
+      const tc = cellsNow[p.cell].tc;
       const frag = new DOMParser().parseFromString(wrapNs(xml), 'application/xml');
       if (frag.getElementsByTagName('parsererror').length) throw new Error('사진 칸 XML 생성 오류');
       const old = Array.from(tc.childNodes).filter(n => !(n.nodeType === 1 && n.localName === 'tcPr'));
@@ -358,16 +407,13 @@ export async function buildDocx(D, plan, getSource, onProgress) {
       old.forEach(n => tc.removeChild(n));
       for (const n of Array.from(frag.documentElement.childNodes)) tc.appendChild(doc.importNode(n, true));
       for (const it of items) {
-        const px = [Math.max(16, Math.round(it.tw / 1440 * DPI)), Math.max(16, Math.round(it.th / 1440 * DPI))];
-        const blob = await getSource(it.key, px[0], px[1]);
         const fn = `media/sitelog_${it.docPrId}.jpeg`;
-        newMedia.push(['word/' + fn, blob]);
+        newMedia.push(['word/' + fn, it.blob]); it.blob = null;
         const rel = relsDoc.createElementNS(NS.rel, 'Relationship');
         rel.setAttribute('Id', it.rid);
         rel.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image');
         rel.setAttribute('Target', fn);
         relRoot.appendChild(rel);
-        done++; onProgress && onProgress(done, total, '사진 크기 맞춰 줄이는 중');
       }
     }
     // 검사: 계통도·도형 그대로인지, 넣은 사진 수가 맞는지
@@ -390,7 +436,8 @@ export async function buildDocx(D, plan, getSource, onProgress) {
     const names = Object.keys(zip.files).filter(n => !zip.files[n].dir);
     for (const n of names) {
       if (n === 'word/document.xml' || n === relsPath || n === '[Content_Types].xml') continue;
-      out.file(n, await zip.file(n).async('uint8array'), { createFolders: false });
+      const media = /\.(jpe?g|png|gif)$/i.test(n);   // 이미 압축된 그림은 다시 압축하지 않음(빠름)
+      out.file(n, await zip.file(n).async('uint8array'), media ? { createFolders: false, compression: 'STORE' } : { createFolders: false });
     }
     out.file('word/document.xml', xmlOut, { createFolders: false });
     out.file(relsPath, ser(relsDoc), { createFolders: false });
