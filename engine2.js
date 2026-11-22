@@ -1,5 +1,5 @@
 // 정보통신설비 성능점검 — 현황사진 자동 배치 엔진 v2 (모든 처리는 이 PC 브라우저 안에서만)
-import * as ort from './ort.wasm.bundle.min.mjs?v=20261122a';
+import * as ort from './ort.wasm.bundle.min.mjs?v=20261122c';
 
 const NS = {
   w: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
@@ -55,7 +55,7 @@ export async function loadModel(onProgress) {
 }
 export async function loadExtraRefs() {
   try {
-    const j = await (await fetch('./refs_extra.json?v=20261122a')).json();
+    const j = await (await fetch('./refs_extra.json?v=20261122c')).json();
     return j.refs.map(r => ({ label: normFac(r.label), emb: b64ToF32(r.emb), src: 'extra' }));
   } catch (e) { return []; }
 }
@@ -195,6 +195,62 @@ export function bestGrid(aspects, W, H, gap = 100) {
   return { cols: best.cols, rows: best.rows, tw: best.tw, th: best.th, sizes };
 }
 
+// 칸 안 사진 타일 계산 (twip). mode 'fill' = 칸을 빈틈없이 나눠 꽉 채움(가장자리 조금 잘림), 'fit' = 사진 전체 보이기
+function compositions(n, maxPart) { const out = []; const rec = (left, acc) => { if (!left) { out.push(acc.slice()); return; } for (let k = 1; k <= Math.min(maxPart, left); k++) { acc.push(k); rec(left - k, acc); acc.pop(); } }; rec(n, []); return out; }
+function snap(vals, tol) { const s = [...new Set(vals)].sort((a, b) => a - b); const map = new Map(); let rep = null; for (const v of s) { if (rep === null || v - rep > tol) rep = v; map.set(v, rep); } return map; }
+export const GAP = 60;
+export function layoutCell(aspects, W, H, mode = 'fill') {
+  const n = aspects.length; if (!n) return [];
+  W = Math.floor(W); H = Math.floor(H);
+  if (mode === 'fit') {
+    const g = bestGrid(aspects, W, H, 100); const tiles = []; let k = 0; const rows = [];
+    for (let r = 0; r < g.rows; r++) { const inrow = Math.min(g.cols, n - k); let rh = 0, sw = 0; for (let j = 0; j < inrow; j++) { rh = Math.max(rh, g.sizes[k + j][1]); sw += g.sizes[k + j][0]; } rows.push({ k, inrow, rh, sw }); k += inrow; }
+    const T = rows.reduce((s, r) => s + r.rh + 110, 0); let y = Math.max(0, (H - T) / 2);
+    for (const r of rows) {
+      let x = (W - r.sw - 100 * (r.inrow - 1)) / 2;
+      for (let j = 0; j < r.inrow; j++) { const [w, h] = g.sizes[r.k + j]; tiles.push({ x: Math.round(x), y: Math.round(y + (r.rh + 110 - h) / 2), w: Math.round(w), h: Math.round(h), iw: Math.round(w), ih: Math.round(h), ix: 0, iy: 0 }); x += w + 100; }
+      y += r.rh + 110;
+    }
+    return tiles;
+  }
+  let best = null;
+  for (const dir of ['rows', 'cols']) {
+    for (const comp of compositions(n, 4)) {
+      if (comp.length > 4) continue;
+      let k = 0, tot = 0; const groups = comp.map(c => { const as = aspects.slice(k, k + c); k += c;
+        const len = dir === 'rows' ? W / as.reduce((s, a) => s + a, 0) : H / as.reduce((s, a) => s + 1 / a, 0); tot += len; return { as, len }; });
+      const f = (dir === 'rows' ? H : W) / tot; const crop = Math.max(f, 1 / f);
+      let minA = Infinity, maxA = 0;
+      for (const g of groups) for (const a of g.as) { const A = dir === 'rows' ? a * g.len * g.len * f : (g.len / a) * g.len * f; minA = Math.min(minA, A); maxA = Math.max(maxA, A); }
+      const score = Math.log(crop) + 0.12 * Math.log(maxA / minA);
+      if (!best || score < best.score - 1e-9) best = { score, dir, groups, f };
+    }
+  }
+  const tiles = []; const { dir, groups } = best; let f = best.f;
+  // 너무 많이 잘려야 하는 경우(예: 세로 사진 2장)만 잘림을 1.6배로 제한하고 가운데 정렬 → 칸 밖으로는 절대 안 나감
+  const MAXC = 1.6; let BW = W, BH = H;
+  const along = dir === 'rows' ? 'H' : 'W';
+  if (f < 1 / MAXC) { if (along === 'H') BW = Math.round(W * f * MAXC); else BH = Math.round(H * f * MAXC); f = 1 / MAXC; }
+  else if (f > MAXC) { if (along === 'H') BH = Math.round(H / f * MAXC); else BW = Math.round(W / f * MAXC); f = MAXC; }
+  const ox = Math.round((W - BW) / 2), oy = Math.round((H - BH) / 2);
+  const sc = dir === 'rows' ? BW / W : BH / H;     // 가로(세로)를 줄였으면 자연 길이도 같이 줄어듦
+  if (dir === 'rows') {
+    let y = oy;
+    groups.forEach((g, gi) => { const h = gi === groups.length - 1 ? oy + BH - y : Math.round(g.len * sc * f); let x = ox;
+      g.as.forEach((a, j) => { const w = j === g.as.length - 1 ? ox + BW - x : Math.round(a * g.len * sc); tiles.push({ x, y, w, h }); x += w; }); y += h; });
+  } else {
+    let x = ox;
+    groups.forEach((g, gi) => { const w = gi === groups.length - 1 ? ox + BW - x : Math.round(g.len * sc * f); let y = oy;
+      g.as.forEach((a, j) => { const h = j === g.as.length - 1 ? oy + BH - y : Math.round(g.len * sc / a); tiles.push({ x, y, w, h }); y += h; }); x += w; });
+  }
+  // 아주 가까운 경계는 하나로 맞춤 (워드 표 칸이 지나치게 잘게 쪼개지지 않게)
+  const mx = snap(tiles.flatMap(t => [t.x, t.x + t.w]).concat([0, W]), 40), my = snap(tiles.flatMap(t => [t.y, t.y + t.h]).concat([0, H]), 40);
+  for (const t of tiles) { const x2 = mx.get(t.x + t.w), y2 = my.get(t.y + t.h); t.x = mx.get(t.x); t.y = my.get(t.y); t.w = x2 - t.x; t.h = y2 - t.y;
+    t.iw = t.w - GAP; t.ih = t.h - GAP; t.ix = GAP / 2; t.iy = GAP / 2; }
+  tiles.fill = true; tiles.W = W; tiles.H = H;
+  return tiles;
+}
+
 // ------------------------------------------------------------ 워드 읽기
 const kids = (el, name) => Array.from(el.children).filter(c => c.namespaceURI === NS.w && c.localName === name);
 function findCells(doc) {
@@ -332,35 +388,54 @@ const PIC_XML = (cx, cy, id, name, rid) =>
   `<w:r><w:rPr><w:noProof/></w:rPr><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="sitelog-photo" descr="${esc(name)}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="${esc(name)}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
 function esc(s) { return String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
 
-function cellXml(items, box) {
+function cellXml(items, box, mode) {
   if (!items.length) return { xml: '<w:p><w:pPr><w:pStyle w:val="TableParagraph"/></w:pPr></w:p>' };
-  const g = bestGrid(items.map(it => it.aspect), box.W, box.H, 100);
-  const TW = Math.floor(g.tw) * g.cols;
-  const SP = '<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">  </w:t></w:r>';
-  let x = `<w:tbl><w:tblPr><w:tblW w:w="${TW}" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar><w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders><w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr><w:tblGrid><w:gridCol w:w="${TW}"/></w:tblGrid>`;
-  let k = 0;
-  for (let r = 0; r < g.rows; r++) {
-    const inrow = Math.min(g.cols, items.length - k);
-    let rh = 0; for (let c = 0; c < inrow; c++) rh = Math.max(rh, g.sizes[k + c][1]);
-    x += `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="${Math.round(rh + 110)}" w:hRule="exact"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${TW}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>`;
-    for (let c = 0; c < inrow; c++) {
-      const it = items[k], [w, h] = g.sizes[k];
-      it.tw = w; it.th = h;
-      if (c) x += SP;
-      x += PIC_XML(Math.round(w * 635), Math.round(h * 635), it.docPrId, it.name, it.rid);
-      k++;
+  const tiles = layoutCell(items.map(it => it.aspect), box.W, box.H, mode);
+  items.forEach((it, i) => { it.tw = tiles[i].iw; it.th = tiles[i].ih; });
+  const pic = it => PIC_XML(Math.round(it.tw * 635), Math.round(it.th * 635), it.docPrId, it.name, it.rid);
+  const P0 = '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>';
+  const TBLPR = W => `<w:tblPr><w:tblW w:w="${W}" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar><w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders><w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>`;
+  let x;
+  if (tiles.fill) {
+    // 칸을 정확히 나눈 타일 → 표 (가로 합치기 gridSpan, 세로 합치기 vMerge)
+    const xs = [...new Set(tiles.flatMap(t => [t.x, t.x + t.w]).concat([0, tiles.W]))].sort((a, b) => a - b);
+    const ys = [...new Set(tiles.flatMap(t => [t.y, t.y + t.h]).concat([0, tiles.H]))].sort((a, b) => a - b);
+    x = `<w:tbl>${TBLPR(tiles.W)}<w:tblGrid>${xs.slice(1).map((v, i) => `<w:gridCol w:w="${v - xs[i]}"/>`).join('')}</w:tblGrid>`;
+    for (let r = 0; r < ys.length - 1; r++) {
+      x += `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="${ys[r + 1] - ys[r]}" w:hRule="exact"/></w:trPr>`;
+      for (let c = 0; c < xs.length - 1; c++) {
+        const ti = tiles.findIndex(t => t.x <= xs[c] && xs[c] < t.x + t.w && t.y <= ys[r] && ys[r] < t.y + t.h);
+        if (ti < 0) { x += `<w:tc><w:tcPr><w:tcW w:w="${xs[c + 1] - xs[c]}" w:type="dxa"/></w:tcPr><w:p>${P0}</w:p></w:tc>`; continue; }
+        const t = tiles[ti]; if (t.x !== xs[c]) continue;
+        const span = xs.filter(v => v >= t.x && v < t.x + t.w).length;
+        const top = t.y === ys[r], multi = t.y + t.h > ys[r + 1];
+        const vm = top ? (multi ? '<w:vMerge w:val="restart"/>' : '') : '<w:vMerge/>';
+        x += `<w:tc><w:tcPr><w:tcW w:w="${t.w}" w:type="dxa"/>${span > 1 ? `<w:gridSpan w:val="${span}"/>` : ''}${vm}<w:vAlign w:val="center"/></w:tcPr><w:p>${P0}${top ? pic(items[ti]) : ''}</w:p></w:tc>`;
+      }
+      x += '</w:tr>';
     }
-    x += '</w:p></w:tc></w:tr>';
+    x += '</w:tbl>';
+  } else {
+    // 사진 전체 보이기: 줄마다 가운데 정렬
+    const rows = []; for (const t of tiles) { const last = rows[rows.length - 1]; if (last && Math.abs(last.y - t.y) < 300 && last.n < 4 && t.x > last.lx) { last.items.push(t); last.n++; last.lx = t.x; last.h = Math.max(last.h, t.h); } else rows.push({ y: t.y, items: [t], n: 1, lx: t.x, h: t.h }); }
+    const TW = Math.floor(box.W);
+    x = `<w:tbl>${TBLPR(TW)}<w:tblGrid><w:gridCol w:w="${TW}"/></w:tblGrid>`; let k = 0;
+    for (const row of rows) {
+      x += `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="${Math.round(row.h + 110)}" w:hRule="exact"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${TW}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p>${P0}`;
+      row.items.forEach((t, j) => { if (j) x += '<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">  </w:t></w:r>'; x += pic(items[k++]); });
+      x += '</w:p></w:tc></w:tr>';
+    }
+    x += '</w:tbl>';
   }
-  x += '</w:tbl><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>';
-  return { xml: x, grid: g };
+  x += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>';
+  return { xml: x };
 }
 // 1) 배열 계산으로 사진 크기 확정 → 2) 그 크기에 맞춰 사진 압축
 function wrapNs(inner) {
   return `<root xmlns:w="${NS.w}" xmlns:wp="${NS.wp}" xmlns:a="${NS.a}" xmlns:pic="${NS.pic}" xmlns:r="${NS.r}">${inner}</root>`;
 }
 
-export async function buildDocx(D, plan, getSource, onProgress) {
+export async function buildDocx(D, plan, getSource, onProgress, mode = 'fill') {
   // plan: [{cell, items:[{key,name,aspect}]}] — 바뀐 칸만
   const doc = D.doc, zip = D.zip;
   const cellsNow = findCells(doc);
@@ -384,7 +459,7 @@ export async function buildDocx(D, plan, getSource, onProgress) {
     const jobs = [], built = [];
     for (const p of plan) {
       const items = p.items.map(it => ({ ...it, rid: newRid(), docPrId: docPrId++ }));
-      const { xml } = cellXml(items, D.cells[p.cell].box);
+      const { xml } = cellXml(items, D.cells[p.cell].box, mode);
       built.push({ p, items, xml });
       for (const it of items) jobs.push(it);
     }
@@ -460,16 +535,23 @@ export async function buildDocx(D, plan, getSource, onProgress) {
   }
 }
 
-// 새 사진 → 정해진 픽셀 크기 JPEG
-export async function photoJpeg(file, info, pw, ph, aspect) {
-  // 비율 유지: 표시 크기(pw×ph)는 이미 사진 비율과 같음
-  const bmp = await decodeTo(file, info, pw, ph);
-  const c = new OffscreenCanvas(pw, ph); c.getContext('2d').drawImage(bmp, 0, 0); bmp.close();
+// 사진 → 정해진 픽셀 크기 JPEG (칸 비율과 다르면 가운데 기준으로 잘라 꽉 채움)
+function coverDraw(src, sw, sh, pw, ph) {
+  const s = Math.max(pw / sw, ph / sh), dw = sw * s, dh = sh * s;
+  const c = new OffscreenCanvas(pw, ph), g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+  g.drawImage(src, (pw - dw) / 2, (ph - dh) / 2, dw, dh); return c;
+}
+export async function photoJpeg(file, info, sw, sh, pw, ph) {
+  const s = Math.min(1, Math.max(pw / sw, ph / sh));          // 원본보다 크게 키우지 않음
+  const dw = Math.max(1, Math.round(sw * s)), dh = Math.max(1, Math.round(sh * s));
+  const bmp = await decodeTo(file, info, dw, dh);
+  const k = Math.max(pw / dw, ph / dh) > 1 ? 1 / Math.max(pw / dw, ph / dh) : 1;
+  const c = coverDraw(bmp, dw, dh, Math.max(16, Math.round(pw * k)), Math.max(16, Math.round(ph * k))); bmp.close();
   return await c.convertToBlob({ type: 'image/jpeg', quality: JPEG_Q });
 }
 export async function oldJpeg(blob, pw, ph) {
   const b = await createImageBitmap(blob);
-  const c = new OffscreenCanvas(pw, ph), g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
-  g.drawImage(b, 0, 0, pw, ph); b.close();
+  const lim = Math.max(pw / b.width, ph / b.height) > 1 ? 1 / Math.max(pw / b.width, ph / b.height) : 1;
+  const c = coverDraw(b, b.width, b.height, Math.max(16, Math.round(pw * lim)), Math.max(16, Math.round(ph * lim))); b.close();
   return await c.convertToBlob({ type: 'image/jpeg', quality: JPEG_Q });
 }
